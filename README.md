@@ -15,5 +15,7 @@ For details on how to submit take a look at [Section 1](https://github.com/CS171
 
 ---
 **Name**:
+Wentao Xu
 
 **Email**:
+wentaoxu@college.harvard.edu
