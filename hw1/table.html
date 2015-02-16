@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+  <body>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script>
+      var filtered_columns = ["name", "continent", "gdp", "life_expectancy", "population", "year"]
+
+      d3.json("data/countries_2012.json", function(error, data){
+
+        //var columns = Object.keys(data[0]);
+        
+
+        var table = d3.select("body").append("table"),
+          thead = table.append("thead")
+                       .attr("class", "thead");
+          tbody = table.append("tbody");
+
+        table.append("caption")
+          .html("World Countries Ranking 2");
+
+        thead.append("tr").selectAll("th")
+          .data(filtered_columns)
+        .enter()
+          .append("th")
+          .text(function(d) { return d; })
+          .on("click", function(header, i) {
+            tbody.selectAll("tr").sort(function(a, b) {
+              return d3.descending(a[header], b[header]);
+            });
+          });
+
+        var rows = tbody.selectAll("tr.row")
+          .data(data)
+          .enter()
+          .append("tr").attr("class", "row");
+
+        var formatGDP = d3.format(".3s");
+        var formatLifeExp = d3.format(".3r")
+        var formatPop = d3.format(",")
+
+        var cells = rows.selectAll("td")
+                    .data(function(row) {
+                      return filtered_columns.map(function(column){
+                          return row[column];
+
+                    });
+                  })
+          .enter()
+          .append("td")      
+          .text(function(d, i) {
+            switch(i){
+              case 2:
+                return formatGDP(d);
+              case 3:
+                return formatLifeExp(d);
+              case 4:
+                return formatPop(d);
+              default:
+                return d;
+            }
+          })
+
+      });
+    </script> 
+  </body>
+</html>
