@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <meta charset="utf-8">
+  <head>
+    <style>
+      .zebra {
+        background-color: #D8D8D8;
+      }
+    </style>
+  </head>
   <body>
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <script>
@@ -19,21 +26,47 @@
         table.append("caption")
           .html("World Countries Ranking 2");
 
-        thead.append("tr").selectAll("th")
-          .data(filtered_columns)
-        .enter()
-          .append("th")
-          .text(function(d) { return d; })
-          .on("click", function(header, i) {
-            tbody.selectAll("tr").sort(function(a, b) {
-              return d3.descending(a[header], b[header]);
-            });
-          });
 
         var rows = tbody.selectAll("tr.row")
           .data(data)
           .enter()
-          .append("tr").attr("class", "row");
+          .append("tr").attr("class", "row")
+          .attr("class", function(d, i){
+            if (i%2==0){
+              return "zebra";
+            }
+          });
+
+
+        thead.append("tr").selectAll("th")
+          .data(filtered_columns)
+          .enter()
+          .append("th")
+          .text(function(d) { return d; })
+          .on("click", function(header, i) {
+            tbody.selectAll("tr").sort(function(a, b) {
+              if (header == "name" || header == "continent"){
+                if (a[header] == b[header]){
+                  return d3.descending(a["gdp"], b["gdp"]);
+                }
+                return d3.ascending(a[header], b[header]);
+              }
+              else {
+                if (a[header] == b[header]){
+                  return d3.ascending(a["name"], b["name"]);
+                }
+                return d3.descending(a[header], b[header]);
+              }
+            })
+              .attr("class", function(d, i){
+                if (i%2==0){
+                  return "zebra";
+                }
+              });
+          });
+
+
+
 
         var formatGDP = d3.format(".3s");
         var formatLifeExp = d3.format(".3r")
@@ -59,7 +92,7 @@
               default:
                 return d;
             }
-          })
+          });
 
       });
     </script> 
