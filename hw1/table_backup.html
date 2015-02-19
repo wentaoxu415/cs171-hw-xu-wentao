@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+  <head>
+    <style>
+      .zebra {
+        background-color: #D8D8D8;
+      }
+
+    </style>
+  </head>
+  <body>
+    <!-- Filter by continents-->
+    <form action ="">
+      Filter by: 
+      <label>Americas<input class = "filter_button" type="checkbox" name="Americas" value="Americas" id="Americas" title="Americas" onchange="update_filter()"></input></label>
+      <label>Africa<input class = "filter_button" type="checkbox" name="Africa" value="Africa" id="Africa" title="Africa" onchange="update_filter()"></input></label>
+      <label>Asia<input class = "filter_button" type="checkbox" name="Asia" value="Asia" id="Asia" title="Asia" onchange="update_filter()"></input></label>
+      <label>Europe<input class = "filter_button" type="checkbox" name="Europe" value="Europe" id="Europe" title="Europe" onchange="update_filter()"></input></label>
+      <label>Oceania<input class = "filter_button" type="checkbox" name="Oceania" value="Oceania" id="Oceania" title="Oceania" onchange="update_filter()"></input></label>
+    </form>
+    <br>
+
+
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script>
+      // Global variables
+      var download_data = []
+      var filtered_data = ["name", "continent", "gdp", "life_expectancy", "population", "year"];
+      var test_data = ["name"]
+      var continents = {"Americas": false, "Africa":false, "Asia":false, "Europe":false, "Oceania": false};
+      var cont_keys = Object.keys(continents);
+      
+      //Formatting functions
+      var formatGDP = d3.format(".3s")
+      var formatLifeExp = d3.format(".3r")
+      var formatPop = d3.format(",")
+      var update_filter = function(){
+         for (var key in continents){
+            continents[key] = false
+         }
+         d3.selectAll("input").each(function(d){
+         if(d3.select(this).attr("type")=="checkbox" && d3.select(this).node().checked){
+              var cont_name = d3.select(this).attr("name");
+              continents[cont_name] = true;
+         }
+        })
+      }
+
+      //Load data 
+      d3.json("data/countries_2012.json", function(error, data){
+        download_data = data;
+
+        //Create a table
+        var table = d3.select("body").append("table"),
+          thead = table.append("thead")
+                       .attr("class", "thead");
+          tbody = table.append("tbody");
+
+        //Create a table title
+        table.append("caption")
+          .html("World Countries Ranking");
+
+        //Create rows and shade zebra pattern
+        var rows = tbody.selectAll("tr.row")
+          .data(download_data)
+          .enter().append("tr")
+          .attr("class", "row")
+          .attr("class", function(d, i){
+            if (i%2==0){
+              return "zebra";
+            }
+          });
+
+        //Display the data on the table
+        var cells = rows.selectAll("td")
+                    .data(function(row) {
+                      return filtered_data.map(function(column){
+                          return row[column];
+                    });
+                  })
+          .enter().append("td")      
+          .text(function(d, i) {
+            switch(i){
+              case 2:
+                return formatGDP(d);
+              case 3:
+                return formatLifeExp(d);
+              case 4:
+                return formatPop(d);
+              default:
+                return d;
+            }
+          });
+
+        //Name the header
+        thead.append("tr").selectAll("th")
+          .data(filtered_data)
+          .enter()
+          .append("th")
+          .text(function(d) { return d; })
+
+          //Sort the data
+          .on("click", function(header, i) {
+            tbody.selectAll("tr").sort(function(a, b) {
+              if (header == "name" || header == "continent"){
+                if (a[header] == b[header]){
+                  return d3.descending(a["gdp"], b["gdp"]);
+                }
+                return d3.ascending(a[header], b[header]);
+              }
+              else {
+                if (a[header] == b[header]){
+                  return d3.ascending(a["name"], b["name"]);
+                }
+                return d3.descending(a[header], b[header]);
+              }
+            })
+            .attr("class", function(d, i){
+              if (i%2==0){
+                return "zebra";
+              }
+            });
+          });
+
+  
+      var update = function(new_data){
+        //REMOVE
+          d3.select('table').remove();
+
+        //Create a table
+          var table = d3.select("body").append("table"),
+          thead = table.append("thead")
+                       .attr("class", "thead");
+          tbody = table.append("tbody");
+
+        //Create a table title
+          table.append("caption")
+          .html("World Countries Ranking");
+        
+        thead.append("tr").selectAll("th")
+          .data(filtered_data)
+          .enter()
+          .append("th")
+          .text(function(d) { return d; })
+        //ENTER
+        //Create table rows
+          var rows = tbody.selectAll("tr.row")
+            .data(new_data);
+          rows.enter().append("tr")
+          .attr("class", "row")
+          .attr("class", function(d, i){
+            if (i%2 == 0){
+              return "zebra";
+            }
+          });
+
+          //ENTER + UPDATE
+          var cells = rows.selectAll("td")
+              .data(function(row) {
+                return filtered_data.map(function(column){
+                  return row[column];
+                });
+              })
+          .enter().append("td")      
+          .text(function(d, i) {
+            switch(i){
+              case 2:
+                return formatGDP(d);
+              case 3:
+                return formatLifeExp(d);
+              case 4:
+                return formatPop(d);
+              default:
+                return d;
+            }
+          });
+          //EXIT
+          rows.exit().remove();
+        };
+
+      //   var update_filter = function(){
+      //   for (var i in cont_keys){
+      //     //if (d3.select('#Americas').attr('checked')== true){
+          
+      //       if (d3.select(".filter_button").attr("checked")==true){
+      //       continents[cont_keys[i]] = true;
+      //     }        
+      //   }
+      //   // if (d3.select(this).property('checked')==true){
+      //   //   continent[d3.select(this).attr('name')] = true;
+      //   // }
+      //   var checked_data = data.filter(function(d){
+      //     for (var i in cont_keys){
+      //       if (continents[cont_keys[i]] == true){
+      //         return d["continent"] == "Americas";
+      //       }
+      //     }
+      //   });
+      //   update(checked_data);
+      // }
+
+        // Dynamically change according to the checkbox
+        //d3.selectAll("input").on("change", function(){
+          d3.selectAll("input").on("change", function(){
+          update_filter();
+          // if (d3.select('#Americas').attr("type") == "checkbox" && d3.select('#Americas').property('checked')==true){
+          //   //console.log(d3.select(this).attr("name"));
+          //   //var continent = d3.select(this).attr("name");
+          //   var checked_data = data.filter(function(d){
+          //     return d["continent"] == 'Americas';
+          //   });
+          //   update(checked_data);
+          // }
+      });
+        
+      // var update_filter = function(){
+      //   if (d3.select(this).property('checked')==true){
+      //     continent[d3.select(this).attr("name")] = true;
+      //   }
+      //   var checked_data = data.filter(function(d){
+      //     for (var i in cont_keys){
+      //       if (continents[cont_keys[i]] == true){
+      //         return d["continent"];
+      //       }
+      //     }
+      //   })
+      //   update(checked_data);
+      // };
+
+
+      });
+    </script> 
+  </body>
+</html>
