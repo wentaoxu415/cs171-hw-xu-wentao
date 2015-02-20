@@ -6,23 +6,24 @@
 		.zebra {
 			background-color: #D8D8D8;
 		}
-
+		#time_slider{
+			width: 400px;
+		}
 		.slider{
 			display: inline-block;
 		}
-		#slider-time{
-			width: 400px;
-		}
-		p {
+		p{
 			display: inline;
 		}
 	 </style>
 	</head>
 	<body>
-		Time update:
-		<div class="slider"><p id="min-year"></p><input type="range" min="1995" max="2012" step="1" value="0" id="slider-time" oninput=";"><p id="max-year"></p></div>
+	<div class = "slider">
+	Time Update:
+	<p id="min_year"></p><input type="range" id="time_slider" min="1995" max="2012" value="0" step="1"></input><p id = "max_year"></p>
+	</div>
 	 <!-- Filter by continents-->
-	 	<form action ="">
+	 <form action ="">
 		Filter by: 
 		<label>Americas<input class = "filter_button" type="checkbox" name="Americas" value="Americas" id="Americas" title="Americas" onchange="detect_checks()"></input></label>
 		<label>Africa<input class = "filter_button" type="checkbox" name="Africa" value="Africa" id="Africa" title="Africa" onchange="detect_checks()"></input></label>
@@ -41,7 +42,6 @@
 		var download_data = []
 		var filtered_data = []
 		var aggregate_data = []
-		var flat_time_data = []
 		var categories = ["name", "continent", "gdp", "life_expectancy", "population", "year"];
 		var continents = {"Americas": true, "Africa":true, "Asia":true, "Europe":true, "Oceania": true};
 		var cont_keys = Object.keys(continents);
@@ -50,14 +50,13 @@
 		var formatGDP = d3.format(".3s")
 		var formatLifeExp = d3.format(".3r")
 		var formatPop = d3.format(",")
-		
-		var min_max_year = function(){
-			min_year = d3.select("#slider-time").attr("min");
-			max_year = d3.select("#slider-time").attr("max");	
-			d3.select("#min-year").text(min_year)
-			d3.select("#max-year").text(max_year)
-		};
 
+		var min_max_year = function(){
+			min_year = d3.select("#time_slider").attr("min")
+			max_year = d3.select("#time_slider").attr("max")
+			d3.select("#min_year").text(min_year)
+			d3.select("#max_year").text(max_year)
+		}
 		var none = function(){
 			d3.select("#bycontinent").property("checked", false)
 			detect_checks()
@@ -91,17 +90,6 @@
 					return {name: d.key, continent: d.key, gdp: d.values.gdp, life_expectancy: d.values.life_expectancy, population: d.values.population, year: d.values.year};
 				})
 				update_table(aggregate_data)
-		}
-
-		var flat_data = function(new_data){
-			flat_time_data = new_data.map(function(d){
-				return { name: d.name, continent: d.continent, values: d.years}
-			})
-			var initial_time_data = new_data.map(function(d){
-				return {name: d.name, continent: d.continent, gdp:d.years[0].gdp, life_expectancy: d.years[0].life_expectancy, d.years[0].population, d.years[0].year}
-			})
-			console.log(initial_time_data);
-			return initial_time_data
 		}
 
 		var create_table = function(new_data){
@@ -225,9 +213,9 @@
 		//Load data 
 		d3.json("data/countries_1995_2012.json", function(error, data){
 			download_data = data;
-			filtered_data = flat_data(download_data)
-			create_table(filtered_data);
-			min_max_year()
+			filtered_data = data;
+			min_max_year();
+			create_table(download_data);
 		});
 	 </script> 
 	</body>
