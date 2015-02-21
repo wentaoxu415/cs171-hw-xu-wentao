@@ -2,7 +2,7 @@ Homework 1 Answers
 =======
 Name: Wentao Xu  
 HUID: 40871691
------------
+
 Question 1.1
 -----------
 While HTML source code shows the script to display table with data, the DOM inspections shows this script AND the the generated table and data that are now integrated into DOM. I would use the DOM inspector if I want to quickly check the DOM or make sure that the script in HTML ran correctly because the structured representaiton of the document makes this task easy. On the other hand, HTML source is useful if I want to understand what scripts generated certain elements in the DOM.  
