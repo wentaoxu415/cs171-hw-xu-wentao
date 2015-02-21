@@ -17,9 +17,31 @@
     .axis text{
         font: 12px sans-serif;
     }
+    #time_slider{
+        width: 400px;
+    }
+    .slider{
+        display: inline-block;
+    }
+    p{
+        display: inline;
+    }
   </style>
 </head>
 <body>
+    <!-- Update by year -->
+    <div class = "slider">
+    Time Update:
+    <p id="min_year"></p><input type="range" id="time_slider" name="points" min="1995" max="2012" value="0" step="1" oninput="update_year(this.value)"></input><p id = "max_year"></p>
+    </div>
+    <br>
+    <!-- Pick a data type -->
+    Pick Data:
+    <label>Population<input class = "pick_data" type="radio" id="pick_population" name="population" onclick="pick_data(this.name)" checked="checked"></input></label> 
+    <label>GDP<input class = "pick_data" type="radio" id="pick_gdp" name="gdp" onclick="pick_data(this.name)"</input></label> 
+    <label>Life Expectancy<input class = "pick_data" type="radio" id="pick_life_expectancy" name="life_expectancy" onclick="pick_data(this.name)"></input></label> 
+
+    <!-- Filter by continent -->
     <form action ="">
         Filter by: 
         <label>Americas<input class = "filter_button" type="checkbox" name="Americas" value="Americas" id="Americas" title="Americas" onchange="handle_checks()"></input></label>
@@ -31,24 +53,27 @@
 
     <!-- Filter by Aggregation -->
     Aggregation:
-    <label>None<input type="radio" id = "none" name="none" value="none" onclick="none()" checked="checked"></label>
-    <label>By Continent<input type="radio" id = "bycontinent" name="bycontinent" value="bycontinent" onclick="aggregate()"></label>
+    <label>None<input type="radio" id = "none" name="none" value="none" onclick="none()" checked="checked"></input></label>
+    <label>By Continent<input type="radio" id = "bycontinent" name="bycontinent" value="bycontinent" onclick="aggregate()"></input></label>
+     <br>
+
+    <!-- Sort function -->
+    Sort by:
+    <label>Name<input class = "sort" type="radio" id = "name" name="name" onclick="sort_data(this.name)" checked="checked"></input></label>
+    <label>Population<input class = "sort" type="radio" id = "population" name="population" onclick="sort_data(this.name)"></input></label>
+    <label>GDP<input class = "sort" type="radio" id = "gdp" name="gdp" onclick="sort_data(this.name)"></input></label>
+    <label>Life Expectancy<input class = "sort" type="radio" id = "life_expectancy" name="life_expectancy" onclick="sort_data(this.name)"></input></label>
     <br>
     <br>
 
   <script type="text/javascript">
-
-    /*
-    START OF PERSONALIZED FUNCTIONS
-    */
     var original_data = []
     var filtered_data = []
-    //var aggregate_data = []
     var categories = ["name", "continent", "gdp", "life_expectancy", "population", "year"];
     var continents = {"Americas": true, "Africa":true, "Asia":true, "Europe":true, "Oceania": true};
     var current_year = 1995
     var margin = {top: 50, bottom: 10, left:200, right: 40};
-
+    
     var flatten_data = function(given_year){
         var flat_data = []
         for (var i=0; i < original_data.length; i++){
@@ -56,6 +81,89 @@
         }
         return flat_data;
     };
+
+    var pick_data = function(header){
+        d3.selectAll(".pick_data").property("checked", false)
+        d3.select("#pick_"+header).property("checked", true)
+        update_bar(header)
+    }
+
+    var sort_data = function(header){
+        d3.selectAll(".sort").property("checked", false)
+        d3.select("#"+header).property("checked", true)
+        filtered_data = flatten_data(current_year)
+        filtered_data = filtered_data.sort(function(a, b){
+            if (header == "name" || header == "continent"){
+                if (a[header] == b[header]){
+                    return d3.descending(a["gdp"], b["gdp"]);
+                }
+                return d3.ascending(a[header], b[header]);
+            }
+            else {
+                if (a[header] == b[header]){
+                    return d3.ascending(a["name"], b["name"]);
+                }
+                return d3.descending(a[header], b[header]);
+            }
+        })
+        update_bar()
+    }
+
+    var update_year = function(new_year){
+    current_year = new_year
+    if (d3.select("#none").property("checked") == true){
+        filtered_data = flatten_data(new_year);
+        handle_checks()
+    }
+    else{
+        aggregate()
+        }
+    }
+
+    var min_max_year = function(){
+        min_year = d3.select("#time_slider").attr("min")
+        max_year = d3.select("#time_slider").attr("max")
+        d3.select("#min_year").text(min_year)
+        d3.select("#max_year").text(max_year)
+    }
+    var none = function(){
+        d3.select("#bycontinent").property("checked", false)
+        filtered_data = flatten_data(current_year)
+        handle_checks()
+    }
+
+    var aggregate = function(){
+    d3.select("#none").property("checked", false)
+    filtered_data = flatten_data(current_year)
+    detect_checks()
+    update_filter()
+    var nested_rows = d3.nest()
+        .key(function(d){
+            return d.continent;
+        })
+        .rollup(function(d){
+            return {
+                gdp: d3.sum(d, function(g){
+                    return +g.gdp;
+                }),
+                life_expectancy: d3.mean(d, function(g){
+                    return +g.life_expectancy;
+                }),             
+                population: d3.sum(d, function(g){
+                    return +g.population;
+                }),
+                year: d3.median(d, function(g){
+                    return g.year
+                })
+            };
+        })
+        .entries(filtered_data)
+
+        filtered_data = nested_rows.map(function(d){
+            return {name: d.key, continent: d.key, gdp: d.values.gdp, life_expectancy: d.values.life_expectancy, population: d.values.population, year: d.values.year};
+        })
+        update_bar(filtered_data)
+}
 
     var detect_checks = function(){
         var counter = 0;
@@ -99,18 +207,21 @@
         filtered_data = filtered_data.filter(function(d){
             return continents[d.continent]
         });
-
+        console.log(filtered_data);
         update_bar()
     }
 
-    var update_bar = function(){
+    var update_bar = function(header){
         var width = 1000 - margin.left - margin.right;
         var height = filtered_data.length * 25 - margin.top - margin.bottom;
+        if (height < 25){
+            height = 25;
+        }
         var xScale = d3.scale.linear().range([0, width]);
         var yScale = d3.scale.ordinal().rangeRoundBands([0, height], .8, 0);
 
         d3.select("svg").remove();
-        
+
         var svg = d3.select("body").append("svg")
                     .attr("width", width+margin.left+margin.right)
                     .attr("height", height+margin.top+margin.bottom);
@@ -118,8 +229,18 @@
 
         var g = svg.append("g")
                     .attr("transform", "translate("+margin.left+","+margin.top+")")
-      
-        var max = d3.max(filtered_data, function(d) { return d.population; } );
+        
+        var max;
+        if (header == "population"){
+            max = d3.max(filtered_data, function(d) { return d.population} );
+        }
+        else if (header=="gdp"){
+            max = d3.max(filtered_data, function(d) { return d.gdp} );
+        }
+        else if (header=="life_expectancy"){
+            max = d3.max(filtered_data, function(d) { return d.life_expectancy} );
+        }
+        
         var min = 0;
 
 
@@ -144,15 +265,36 @@
  
         var bars = rows
                     .append("rect")
-                    .attr("width", function(d) { return xScale(d.population); })
+                    //.attr("width", function(d) { return xScale(filtered_data); })
                     .attr("height", 5)
                     .attr("x", xScale(min))
                     .attr("y", function(d) { return yScale(d.name); })
+        switch(header){
+            case "population":
+                bars.attr("width", function(d){ return xScale(d.population)})
+                break;
+            case "gdp":
+                bars.attr("width", function(d){ return xScale(d.gdp)})
+                break;
+            case "life_expectancy":
+                bars.attr("width", function(d){ return xScale(d.life_expectancy)})
+                break;
+        }
+        if (header == "population"){
+            bars.attr("width", function(d){ return xScale(d.population)})
+        }
+        else if (header=="gdp"){
+            bars.attr("width", function(d){ return xScale(d.gdp)})
+        }
+        else if (header=="life_expectancy"){
+            bars.attr("width", function(d){ return xScale(d.life_expectancy)})
+        }
     }
     d3.json("data/countries_1995_2012.json", function(error, data) {
         original_data = data;
         filtered_data = flatten_data(current_year)
-        update_bar()
+        update_bar("population")
+        min_max_year()
     });
   </script>
 </body>
