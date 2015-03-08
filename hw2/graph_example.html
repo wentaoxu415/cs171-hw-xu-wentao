@@ -138,7 +138,7 @@ function circular_layout() {
           .value(function(d, i) { 
             return 1;  // We want an equal pie share/slice for each point
           });
-
+  
   graph.nodes = pie(graph.nodes).map(function(d, i) {
     // Needed to caclulate the centroid
     d.innerRadius = 0;

@@ -5,6 +5,7 @@
   .link {
     stroke: gray;
     stroke-width: .8px;
+    stroke-opacity: .8;
   }
 
   .node {
@@ -16,6 +17,17 @@
   .node:hover {
     fill: black;
   }
+
+  
+  .node-fade{
+    opacity: 0.5;
+  }
+
+  .link-fade{
+    stroke-opacity: .3;
+  }
+
+
 </style>
 <body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -32,6 +44,7 @@
   <label><input type="radio" name="grouping" value="group1">Group 1</label>
   <label><input type="radio" name="grouping" value="group2">Group 2</label>
   <label><input type="radio" name="grouping" value="group3">Group 3</label>
+  <label><input type="radio" name="grouping" value="group4">Group 4</label>
   </form>
   <form>
   Color:
@@ -67,7 +80,7 @@
 var margin = {top: 50, bottom: 10, left: 300, right: 40};
 var width = 1800 - margin.left - margin.right;
 var height = 1000 - margin.top - margin.bottom;
-
+var current_year = 1995;
 var svg = d3.select("body").append("svg")
             .attr("class", "svg")
             .attr("width", width)
@@ -76,31 +89,20 @@ var svg = d3.select("body").append("svg")
 var fill = d3.scale.category10();
 
 var graph = {nodes: [], links: []};
+var link = null;
 var node = null;
+var location_x = [{}];
+var location_y = [{}];
 var foci = [{x:200, y:400}, {x:500, y:700}, {x:700, y:200}, {x:900, y:700}, {x:1200, y:400}];
 var data_type = "population";
 var nb_nodes = 120, nb_cat = 10;
 var node_scale = d3.scale.linear().domain([0, nb_cat]).range([5, 50])
 
-graph.nodes = d3.range(nb_nodes).map(function() {  
-  return { 
-    cat: Math.floor(nb_cat*Math.random())
-  }; 
-})
-
-// graph.nodes.forEach(function(d, i) {
-//   graph.nodes.forEach(function(e, j) {
-//     if(Math.random()>.99 && i!=j)
-//       graph.links.push({"source": i, "target": j})
-
-//   })
-// })
-
 // Generate the force layout
 var force = d3.layout.force()
     .size([width, height])
     .charge(-30)
-    //.linkDistance(10)
+    .linkDistance(10)
     .on("tick", tick)
     .on("start", function(d) {})
     .on("end", function(d) {})
@@ -111,13 +113,20 @@ var continentScale = d3.scale.ordinal()
 //////////////////////////////////////////////
 //FUNCTIONS
 function draw_graph(){
+  link = svg.selectAll(".link")
+            .data(graph.links);
+  
+  link.enter().append("line")
+              .attr("class", "link")
+
   node = svg.selectAll(".node")
             .data(graph.nodes)
           .enter()
             .append("g").attr("class", "node");
+  
   node.append("circle")
     .attr("r", 5)
-    .style("fill", function(d){return fill(continentScale(d.continent));});
+    //.style("fill", function(d){return fill(continentScale(d.continent));});
 
   node.append("text")
       .text(function(d){return d.name;})
@@ -221,7 +230,7 @@ function force_layout() {
  force.nodes(graph.nodes)
       .size([width, height])
       .on("tick", tick)
-      //.links(graph.links)
+      .links(graph.links)
       .start();
 }
 
@@ -250,7 +259,23 @@ function line_cat_layout() {
 function circular_layout(data_type) {
 
   force.stop();
+  
+  graph.nodes.forEach(function(d, i){
+    d.top_partners.forEach(function(e, j){
+      graph.links.push({"source": d, "target": d.top_partners[j]})
+    })
+  })
+  
+  link = svg.selectAll(".link")
+            .data(graph.links);
+  
+  link.enter().append("line")
+              .attr("class", "link")
 
+  d3.selectAll(".node").remove();
+  draw_graph();
+  node.on("mouseover", mouseovered);
+  node.on("mouseout", mouseouted);
   var r = Math.min(height, width)/2;
 
   var arc = d3.svg.arc()
@@ -276,7 +301,8 @@ function circular_layout(data_type) {
     return d.data;
   })
   d3.select("body").on("mousedown", mousedown);
-  graph_update(500);
+  graph_update_link(500);
+  force.on("tick", graph_update_link(0))
 }
 
 function category_color() {
@@ -295,10 +321,32 @@ function category_size() {
 }
 
 function graph_update(duration) {
+
   node.transition().duration(duration)
       .attr("transform", function(d) { 
         return "translate("+d.x+","+d.y+")"; 
       });
+}
+
+function graph_update_link(duration){
+
+
+  for (var i = 0; i < graph.nodes.length; i++){
+    console.log(graph.nodes[i])
+    location_x[graph.nodes[i].country_id] = graph.nodes[i].x;
+    location_y[graph.nodes[i].country_id] = graph.nodes[i].y;
+  }
+
+  link.transition().duration(duration)
+      .attr("x1", function(d) { return location_x[d.target.country_id]; })
+      .attr("y1", function(d) { return location_y[d.target.country_id]; })
+      .attr("x2", function(d) { return d.source.x; })
+      .attr("y2", function(d) { return d.source.y; });
+  
+  node.transition().duration(duration)
+      .attr("transform", function(d) { 
+        return "translate("+d.x+","+d.y+")"; 
+  });
 }
 
 function scatter_pop_gdp(){
@@ -387,6 +435,59 @@ function group3(){
   // })
   graph_update(500);
 }
+
+
+var flatten_data = function(given_year){
+    var flat_data = []
+    for (var i=0; i < original_data.length; i++){
+        flat_data[i] = {
+          name: original_data[i].name, 
+          country_id: original_data[i].country_id, 
+          continent: original_data[i].continent, 
+          longitude: original_data[i].longitude, 
+          latitude:original_data[i].latitude, 
+          gdp:original_data[i].years[given_year-1995].gdp, 
+          life_expectancy: original_data[i].years[given_year-1995].life_expectancy, 
+          population: original_data[i].years[given_year-1995].population,
+          top_partners: original_data[i].years[given_year-1995].top_partners,
+          year: original_data[i].years[given_year-1995].year
+        };
+    }
+    return flat_data;
+};
+
+function mouseovered(d){
+  var targets = [];
+  for (var i=0; i< 10; i++){
+    targets.push(d.top_partners[i].country_id);
+  }
+  
+  node
+    .classed("node-fade", true)
+    // .classed("node-fade", function(n){
+    // for (var i = 0; i < 10; i++){
+    //   if (n.top_partners[i].country_id===n.country_id){
+    //     return false;
+    //   }
+    // }
+    // });
+  };
+
+  //   })
+  // link
+  //   .classed("link-fade", true);
+  // node
+  //   .classed("node-fade", true)
+  //   .classed("node-fade", function(l){if (l.country_id === 237) return false;})
+  // node
+  //   .classed("node--target", function())
+  //   .classed("node-fade", function(n))
+function mouseouted(d){
+  link
+    .classed("link-fade", false);
+  node
+    .classed("node-fade", false);
+}
 /////////////////////////////////////////////////////////////
 //MENU LISTENER
 d3.select("input[value=\"force\"]").on("click", force_layout);
@@ -412,8 +513,9 @@ d3.select("input[value=\"group1\"]").on("click", group1)
 d3.select("input[value=\"group2\"]").on("click", group2)
 d3.select("input[value=\"group3\"]").on("click", group3)
 /////////////////////////////////////////////////////////////
-d3.json("data/countries_2012.json", function(error, data){
-  graph.nodes = data;
+d3.json("data/countries_1995_2012.json", function(error, data){
+  original_data = data;
+  graph.nodes = flatten_data(current_year);
   draw_graph();
   force_layout();
   linear_ranking(data_type);
