@@ -1,9 +1,16 @@
 <!DOCTYPE html>
+<html lang="en">
 <meta charset="utf-8">
 <title>Homework 2 Graph</title>
 <style>
   body{
     font-family: Gill Sans; sans-serif; 
+  }
+  .panel{
+    display: inline;
+  }
+  #container{
+    vertical-align: text-top;
   }
   .link {
     stroke: gray;
@@ -28,60 +35,87 @@
     stroke-opacity: .2;
     stroke-width: 0px;
   }
+  #time_slider{
+      width: 300px;
+  }
+  .slider{
+      display: inline-block;
+  }
+  .menu{
+    vertical-align: text-top;
+    display:inline-block;
+    margin-left: 20px;
+  }
+  p{
+      display: inline;
+  }
 </style>
 <body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
-<div>--------------------------------------Layout--------------------------------------</div>
+<div class="panel">
+<div class="menu">
+<div><strong>Layout</strong></div>
   <form>
   Ranking:
-    <label><input type="radio" name="ranking" value="ordinal"  checked>Ordinal</label>
+    <label><input type="radio" class="layout" id="ordinal" name="ranking" value="ordinal" checked="checked" onclick="handle_event(this.value)">Ordinal</label>
 
-    <label><input type="radio" name="ranking" value="linear">Linear</label>
+    <label><input type="radio" class="layout" id="linear" name="ranking"  value="linear" onclick="handle_event(this.value)">Linear</label>
   </form>
   <form>
   Horizontal:
-    <label><input type="radio" name="layout" value="line"> Line</label>
-    <label><input type="radio" name="layout" value="line_cat"> Line by Category</label>
+    <label><input type="radio" class="layout" id="line" name="horizontal"  value="line" onclick="handle_event(this.value)"> Line</label>
+    <label><input type="radio" class="layout" id="line_cat" name="horizontal"  value="line_cat" onclick="handle_event(this.value)"> Line by Continent</label>
   </form>
   <form>
   Scatter Plot:
-    <label><input type="radio" name="scatter" value="pop-gdp">Population vs. GDP</label>
-    <label><input type="radio" name="scatter" value="lon-lat">Longitude vs. Latitude</label>
+    <label><input type="radio" class="layout" id="pop_gdp"name="scatter" value="pop_gdp" onclick="handle_event(this.value)">Population vs. GDP</label>
+    <label><input type="radio" class="layout" id="lon_lat" name="scatter" value="lon_lat" onclick="handle_event(this.value)">Longitude vs. Latitude</label>
   </form>
   <form>
   Force Field:
-    <label><input type="radio" name="layout" value="force" checked> Force</label>
-    <label><input type="radio" name="layout" value="random" > Random</label>
-    <label><input type="radio" name="layout" value="circular"> Circular</label>  
+    <label><input type="radio" class="layout" id="force" name="force" value="force" onclick="handle_event(this.value)"> Force</label>
+    <label><input type="radio" class="layout" id="shift" name="force" value="shift" onclick="handle_event(this.value)">Shift</label>
+    <label><input type="radio" class="layout" id="pie" name="force" value="pie" onclick="handle_event(this.value)">Pie</label>
+    <label><input type="radio" class="layout" id="random" name="force" value="random" onclick="handle_event(this.value)"> Random</label>
   </form>
   <form>
-  <div>---------------------------------Visual Options---------------------------------</div>
-  Split the Circle:
-  <label><input type="radio" name="grouping" value="group1">Group 1</label>
-  <label><input type="radio" name="grouping" value="group2">Group 2</label>
-  <label><input type="radio" name="grouping" value="group3">Group 3</label>
-  <label><input type="radio" name="grouping" value="group4">Group 4</label>
+  Circular:
+    <label><input type="radio" class="layout" id="basic" name="circular" value="basic" onclick="handle_event(this.value)">Basic</label>  
+    <label><input type="radio" class="layout" id="rings" name="circular" value="rings" onclick="handle_event(this.value)">Rings</label>
+    <label><input type="radio" class="layout" id="flow" name="circular" value="flow" onclick="handle_event(this.value)">Flow</label>
   </form>
+</div>
+<div class="menu">
   <form>
-  Continent:
+  <div><strong>Visual Options</strong></div>
+  Color:
     <label><input type="radio" name="color" value="nocolor" checked>None</label>
-    <label><input type="radio" name="color" value="color_cat">Color</label>
+    <label><input type="radio" name="color" value="color_cat">Continents</label>
   </form>
   <form>
   Size:
-    <label><input type="radio" name="size" value="nosize" checked>None</label>
-    <label><input type="radio" name="size" value="size_cat">Proportional</label>
+    <label><input type="radio" name="size" value="false" onclick="category_size(this.value)" checked>None</label>
+    <label><input type="radio" name="size" value="true" onclick="category_size(this.value)">Proportional</label>
   </form>
   <form>
-  <div>---------------------------------------Sort-------------------------------------</div>
-  Sort by (Descending Order):
+  <div><strong>Sort</strong></div>
+  Sort by:
     <select>
-      <option value="name" selected>Name</option>
+      <option value="name" selected="selected">Name</option>
       <option value="population">Population</option>
       <option value="gdp">GDP</option>
       <option value="life_expectancy">Life Expectancy</option>
     </select>
   </form>
+  Current Year: <span id="span_year">1995</span><br>
+    <!-- Update by year -->
+    <div class = "slider">
+        Time Update:
+        <p id="min_year">1995</p>
+        <input type="range" id="time_slider" name="points" min="1995" max="2012" value="0" step="1" oninput="update_year(this.value)"></input>
+        <p id = "max_year">2012</p>
+    </div>
+</div>
 <script>
 /****************SETTINGS****************/
 //OFFSETS, DIMENSIONS
@@ -93,17 +127,19 @@ var svg = d3.select("body").append("svg")
             .attr("width", width)
             .attr("height", height);
 
-
 //GLOBAL VARIABLES
 var graph = {nodes: [], links: []};
 var link = null;
 var node = null;
-var ranking = {"ordinal":true, "linear":false}
+var layout_types = {"ordinal":true, "linear":false, "line":false, "line_cat":false, "pop_gdp":false, "lon_lat":false
+,"force":false, "random":false, "basic":false, "pie":false, "rings":false, "flow":false}
 var location_x = [{}];
 var location_y = [{}];
 var foci = [{x:200, y:400}, {x:500, y:700}, {x:700, y:200}, {x:900, y:700}, {x:1200, y:400}];
 var current_year = 1995;
+var current_layout = "ordinal";
 var data_type = "name";
+var size_bool = "false";
 var nb_nodes = 120, nb_cat = 10;
 var node_scale = d3.scale.linear().domain([0, nb_cat]).range([5, 50])
 var continents = ["Africa", "Americas", "Asia", "Europe", "Oceania"]
@@ -115,7 +151,8 @@ var force = d3.layout.force()
     .on("tick", tick)
     .on("start", function(d) {})
     .on("end", function(d) {})
-
+var domain_range = []
+var counter = 0;
 //SCALES
 var fill = d3.scale.category10();
 var continentScale = d3.scale.ordinal()
@@ -123,58 +160,32 @@ var continentScale = d3.scale.ordinal()
     .range([0,1,2,3,4]);
 
 /****************FUNCTIONS****************/
-//Generates the nodes and links
-function draw_graph(){
-  link = svg.selectAll(".link")
-            .data(graph.links);
-  
-  link.enter().append("line")
-              .attr("class", "link")
-
-  node = svg.selectAll(".node")
-            .data(graph.nodes)
-          .enter()
-            .append("g").attr("class", "node");
-  
-  node.append("circle")
-    .attr("r", 5)
-    //.style("fill", function(d){return fill(continentScale(d.continent));});
-
-  node.append("text")
-      .text(function(d){return d.name;})
-      .attr("font-size", "12px")
-      .attr("x", 10)
-      .attr("y", 3)
-      .call(force.drag)
-
-  // graph.nodes = d3.range(graph.nodes.length).map(function(d){
-  //   return {cat: continentScale(d.continent)};
-  // });
+/*DATA HANDLERS*/
+//Format the data for this exericse
+var flatten_data = function(given_year){
+    var flat_data = []
+    for (var i=0; i < original_data.length; i++){
+        flat_data[i] = {
+          name: original_data[i].name, 
+          country_id: original_data[i].country_id, 
+          continent: original_data[i].continent, 
+          longitude: original_data[i].longitude, 
+          latitude:original_data[i].latitude, 
+          gdp:original_data[i].years[given_year-1995].gdp, 
+          life_expectancy: original_data[i].years[given_year-1995].life_expectancy, 
+          population: original_data[i].years[given_year-1995].population,
+          top_partners: original_data[i].years[given_year-1995].top_partners,
+          year: original_data[i].years[given_year-1995].year
+        };
+    }
+    return flat_data;
 };
 
-//Actions for every time increment
-function tick(){
-  graph_update(0)
-}
-
-//Tick for circular grouping #2 -- 
-function tick_group2(e) {
-  var k = .1 * e.alpha;
-  graph.nodes.forEach(function(o, i){
-    o.x += (foci[continentScale(o.continent)].x - o.x)*k;
-    o.y += (foci[continentScale(o.continent)].y - o.y)*k;
-  });
-  graph_update(0)
-}
-
-//Tick for circular grouping #2 -- 
-function tick_group3(e) {
-  var k = .1 * e.alpha;
-  graph.nodes.forEach(function(o, i){
-    o.x += (foci[continentScale(o.continent)].x - o.x)*k;
-    o.y += (foci[continentScale(o.continent)].y - o.y)*k;
-  });
-  graph_update(0)
+//Update the data when data type is changed
+function update_data(value){
+  data_type = value;
+  handle_event(current_layout);
+  category_size(size_bool);
 }
 
 //Sort the data type in display in descending order
@@ -193,33 +204,73 @@ function sort_data(data_type){
   })
 }
 
+//Update year
+function update_year(new_year){
+        current_year = new_year;
+        d3.select("#span_year").text(current_year);
+        graph.nodes = flatten_data(new_year);
+        draw_graph();
+        update_data(data_type);
+        
+}
+//Find the max and min of the data. Used for setting scales.
 function find_max_min(data_type){
   var max = 0;
+  var new_max = 0;
   var min = Math.pow(2,32)-1;
+  var new_min = 0;
+  var temp_data = [];
 
   if (data_type == "population"){
-    max = d3.max(graph.nodes, function(d){
-      return d.population;
-    })
-    min = d3.min(graph.nodes, function(d){
-      return d.population;
-    })
+    for (var year=1995; year<=2012; year++){
+      temp_data = flatten_data(year);
+      new_max = d3.max(temp_data, function(d){
+        return d.population;
+      })
+      if (new_max > max){
+        max = new_max;
+      }
+      new_min = d3.min(temp_data, function(d){
+        return d.population;
+      })
+      if (new_min < min){
+        min = new_min;
+      }
+    }
   }
   else if (data_type=="gdp"){
-    max = d3.max(graph.nodes, function(d){
-      return d.gdp;
-    })
-    min = d3.min(graph.nodes, function(d){
-      return d.gdp;
-    })
+    for (var year=1995; year<=2012; year++){
+      temp_data = flatten_data(year);
+      new_max = d3.max(temp_data, function(d){
+        return d.gdp;
+      })
+      if (new_max > max){
+        max = new_max;
+      }
+      new_min = d3.min(temp_data, function(d){
+        return d.gdp;
+      })
+      if (new_min < min){
+        min = new_min;
+      }
+    }
   }
   else if (data_type=="life_expectancy"){
-    max = d3.max(graph.nodes, function(d){
-      return d.life_expectancy;
-    })
-    min = d3.min(graph.nodes, function(d){
-      return d.life_expectancy;
-    })
+    for (var year=1995; year<=2012; year++){
+      temp_data = flatten_data(year);
+      new_max = d3.max(temp_data, function(d){
+        return d.life_expectancy;
+      })
+      if (new_max > max){
+        max = new_max;
+      }
+      new_min = d3.min(temp_data, function(d){
+        return d.life_expectancy;
+      })
+      if (new_min < min){
+        min = new_min;
+      }
+    }
   }
   else if(data_type=="latitude"){
     max = d3.max(graph.nodes, function(d){
@@ -240,12 +291,243 @@ function find_max_min(data_type){
   return [max, min]
 }
 
-function ordinal_ranking(data_type){
-  force.stop();
-  var domain_range = []
+
+/*EVENT HANDLER*/
+function handle_event(value){
+  sort_data(data_type);
+  for (var key in layout_types){
+    layout_types[key] = false;
+  }
+  d3.selectAll(".layout").property("checked", false);
+  layout_types[value] = true;
+  d3.select("#"+value).property("checked", true);
+  current_layout = value;
+  d3.select(".link").remove();
+  switch(value){
+    case "ordinal":
+      ordinal_ranking();
+      break;
+    case "linear":
+      linear_ranking();
+      break;
+    case "line":
+      line_layout();
+      break;
+    case "line_cat":
+      line_cat_layout();
+      break;
+    case "pop_gdp":
+      scatter_pop_gdp();
+      break;
+    case "lon_lat":
+      scatter_lon_lat();
+      break;
+    case "force":
+      force_layout();
+      break;
+    case "shift":
+      shift_layout();
+      break;
+    case "pie":
+      pie_layout();
+      break;
+    case "random":
+      random_layout();
+      break;
+    case "basic":
+      basic_layout();
+      break;
+    case "rings":
+      rings_layout();
+      break;
+    case "flow":
+      flow_layout();
+      break;
+  } 
+}
+//MENU LISTENER
+d3.select("input[value=\"nocolor\"]").on("click", function() {
+  d3.selectAll("circle").transition().duration(500).style("fill", null);
+})
+d3.select("input[value=\"color_cat\"]").on("click", category_color);
+d3.select("input[value=\"nosize\"]").on("click", function() { size=0;
+  d3.selectAll("circle").transition().duration(500).attr("r", 5);
+})
+d3.select("input[value=\"size_cat\"]").on("click", function(){
+  size=1; category_size});
+d3.select("select").on("change", function(d){
+  data_type = d3.select(this).property("value")
+  update_data(data_type);
+});
+
+/*SVG HELPER FUNCTIONS*/
+//Generates the nodes and links
+function draw_graph(){
   for(var i=0; i<graph.nodes.length;i++){
     domain_range.push(i)
   }
+
+  d3.selectAll(".node").remove();  
+  
+  node = svg.selectAll(".node")
+            .data(graph.nodes)
+          .enter()
+            .append("g").attr("class", "node");
+  
+  node.append("circle")
+    .attr("r", 5)
+    .on('click', function(d){
+      zoom(d);
+    })
+  category_size()
+  horizontal_text()
+
+};
+
+
+function graph_update(duration) {
+  svg.selectAll(".link").remove();
+  node.transition().duration(duration)
+      .attr("transform", function(d) { 
+        return "translate("+d.x+","+d.y+")"; 
+      });
+}
+
+function graph_update_link(duration){
+
+  for (var i = 0; i < graph.nodes.length; i++){
+    location_x[graph.nodes[i].country_id] = graph.nodes[i].x;
+    location_y[graph.nodes[i].country_id] = graph.nodes[i].y;
+  }
+
+  link.transition().duration(duration)
+      .attr("x1", function(d) { return location_x[d.target.country_id]; })
+      .attr("y1", function(d) { return location_y[d.target.country_id]; })
+      .attr("x2", function(d) { return d.source.x; })
+      .attr("y2", function(d) { return d.source.y; });
+  
+  node.transition().duration(duration)
+      .attr("transform", function(d) { 
+        return "translate("+d.x+","+d.y+")"; 
+  });
+}
+
+
+function mouseovered(d){
+  var targets = [];
+  for (var i=0; i< 10; i++){
+    targets.push(d.top_partners[i].country_id);
+  }
+  
+  node
+    .classed("node-fade", function(n){
+      for (var i=0; i<10; i++){
+        if (n.country_id == targets[i] || n.country_id == d.country_id){
+          return false;
+        }
+      }
+      return true;
+    })
+
+  link 
+    .classed("link-fade", function(l, i){
+      for (var i=0; i<10; i++){
+        if(l.source.country_id == d.country_id && l.target.country_id == targets[i]){
+          return false;
+        }
+      }
+      return true;
+    })
+  };
+
+function mouseouted(d){
+  link
+    .classed("link-fade", false);
+  node
+    .classed("node-fade", false);
+}
+
+function category_color() {
+  //update_data(data_type)
+
+  d3.selectAll("circle").transition().duration(500)
+                        .style("fill", function(d) { 
+                          return fill(continentScale(d.continent)); 
+                        });
+}
+
+function category_size(bool) {
+  size_bool = bool;
+  var max_min = find_max_min(data_type);
+  var max = max_min[0];
+  var min = max_min[1];
+  var sizeScale = d3.scale.linear()
+                      .domain([min, max])
+                      .range([5,40])
+
+  d3.selectAll("circle").transition().duration(500)
+                        .attr("r", function(d) { 
+                          if(bool == "true"){
+                            if (data_type == "population"){
+                              console.log(sizeScale(d.population))
+                              return sizeScale(d.population);
+                            }
+                            else if (data_type == "gdp"){
+                              return sizeScale(d.gdp);
+                            }
+                            else if (data_type == "life_expectancy"){
+                              return sizeScale(d.life_expectancy);
+                            }
+                            else{
+                              return 5;
+                            }
+                          }
+                        else{
+                          return 5;
+                        }
+                        });
+ 
+}
+
+//Attaches horizontal text
+function horizontal_text(){
+  d3.selectAll("text")
+    .remove()
+  node.append("text")
+    .text(function(d){return d.name;})
+    .attr("font-size", "12px")
+    .attr("x", 10)
+    .attr("y", 3)
+    .call(force.drag)
+}
+
+//Attaches vertical text
+function vertical_text(){
+  d3.selectAll("text")
+    .remove()
+  node.append("text")
+      .text(function(d){return d.name;})
+      .attr("font-size", "12px")
+      .attr("font-family", "sans-serif")
+      .attr("fill", "black")
+      .attr("x", 10)
+      .attr("y", 3)
+      .attr("transform", function(d){
+        return "rotate(65)"
+      })
+      .call(force.drag);
+}
+
+//Actions for every time increment
+function tick(){
+  graph_update(0)
+}
+
+
+/*LAYOUT FUNCTIONS */
+function ordinal_ranking(){
+  force.stop();
+
   var yScale = d3.scale.ordinal()
                   .domain(domain_range)
                   .rangePoints([margin.top, height-margin.bottom]);
@@ -253,16 +535,12 @@ function ordinal_ranking(data_type){
     d.x = 200;
     d.y = yScale(i);
   })
+  horizontal_text()
   graph_update(500)
 }
 
-function linear_ranking(data_type){
+function linear_ranking(){
   force.stop();
-
-  var domain_range = []
-  for(var i=0; i<graph.nodes.length;i++){
-    domain_range.push(i)
-  }
 
   var max = null;
   var min = null;
@@ -296,35 +574,13 @@ function linear_ranking(data_type){
         break;
     }
   })
+  horizontal_text();
   graph_update(500)
 }
 
-function force_layout() {
- force.nodes(graph.nodes)
-      .size([width, height])
-      .on("tick", tick)
-      .links(graph.links)
-      .start();
-}
-
-function random_layout() {
-  
-  force.stop();
-
-  graph.nodes.forEach(function(d, i) {
-    d.x = width/4 + 2*width*Math.random()/4;
-    d.y = height/4 + 2*height*Math.random()/4;
-  })
-  graph_update(500);
-}
-
+/*HORIZONTAL LAYOUTS*/
 function line_layout() {
-
   force.stop();
-  var domain_range = []
-  for(var i=0; i<graph.nodes.length;i++){
-    domain_range.push(i)
-  }
   var xScale = d3.scale.ordinal()
                       .domain(domain_range)
                       .rangePoints([margin.left, width-margin.right])
@@ -332,25 +588,11 @@ function line_layout() {
     d.x = xScale(i)
     d.y = 250+margin.top;
   })
-
-  d3.selectAll("text")
-    .remove()
-  node.append("text")
-      .text(function(d){return d.name;})
-      .attr("font-size", "12px")
-      .attr("font-family", "sans-serif")
-      .attr("fill", "black")
-      .attr("x", 10)
-      .attr("y", 3)
-      .attr("transform", function(d){
-        return "rotate(65)"
-      })
-      .call(force.drag);
+  vertical_text()
   graph_update(500);
 }
 
 function line_cat_layout() {
-
   force.stop();
 
   for (var i=0; i < continents.length; i++){
@@ -364,23 +606,196 @@ function line_cat_layout() {
       d.y = margin.top+continentScale(d.continent)*200;
     })
   }
-  d3.selectAll("text")
-    .remove()
-  node.append("text")
-      .text(function(d){return d.name;})
-      .attr("font-size", "12px")
-      .attr("font-family", "sans-serif")
-      .attr("fill", "black")
-      .attr("x", 10)
-      .attr("y", 3)
-      .attr("transform", function(d){
-        return "rotate(65)"
-      })
-      .call(force.drag);
+  vertical_text();
   graph_update(500);
 }
 
-function circular_layout(data_type) {
+/*SCATTER LAYOUTS*/
+function scatter_pop_gdp(){
+  force.stop();
+  var max_min_pop = find_max_min("population");
+  var max_pop = max_min_pop[0];
+  var min_pop = max_min_pop[1];
+
+  var max_min_gdp = find_max_min("gdp");
+  var max_gdp = find_max_min("gdp")[0];
+  var min_gdp = find_max_min("gdp")[1];
+
+  var xScale = d3.scale.linear()
+                  .domain([min_pop, max_pop])
+                  .range([margin.left, width-margin.right])
+
+  var yScale = d3.scale.linear()
+                    .domain([min_gdp, max_gdp])
+                    .range([height-margin.bottom, margin.top])
+  graph.nodes.forEach(function(d, i){
+        d.x = xScale(d.population)
+        d.y = yScale(d.gdp)
+  });
+  horizontal_text()
+  graph_update(500);
+}
+
+function scatter_lon_lat(){
+  force.stop();
+  var max_min_lon = find_max_min("longitude");
+  var max_lon = max_min_lon[0];
+  var min_lon = max_min_lon[1];
+
+  var max_min_lat = find_max_min("latitude");
+  var max_lat = max_min_lat[0];
+  var min_lat = max_min_lat[1];
+
+  var xScale = d3.scale.linear()
+                 .domain([min_lon, max_lon])
+                 .range([margin.left, width-margin.right])
+                 .nice()
+  var yScale = d3.scale.linear()
+                  .domain([min_lat, max_lat])
+                  .range([1000, margin.top])
+
+  graph.nodes.forEach(function(d, i){
+      d.x = xScale(d.longitude)
+      d.y = yScale(d.latitude)
+  });
+  horizontal_text()
+  graph_update(500);
+}
+
+/*FORCE LAYOUTS*/
+function force_layout() {
+  force.nodes(graph.nodes)
+      .size([width, height])
+      .charge(-50)
+      .on("tick", tick)
+      .start()
+
+}
+
+function shift_layout(){
+  graph.nodes.forEach(function(d, i){
+    d.x += (continentScale(d.continent)*40 - d.x);
+  });
+  force.nodes(graph.nodes)
+    .size([width, height])
+    .charge(-50)
+    .on("tick", tick)
+    .start();
+
+  svg.style("opacity", 1e-6)
+  .transition()
+    .duration(1000)
+    .style("opacity", 1);
+
+};
+
+
+
+function pie_layout(){
+  force.nodes(graph.nodes)
+      .size([width, height])
+      .charge(-50)
+      .on("tick", tick_pie)
+      .start()
+
+}
+
+//Tick for pie layout
+function tick_pie(e) {
+  var k = .1 * e.alpha;
+  graph.nodes.forEach(function(d, i){
+    d.x += (foci[continentScale(d.continent)].x - d.x)*k;
+    d.y += (foci[continentScale(d.continent)].y - d.y)*k;
+  });
+  graph_update(0)
+}
+
+function random_layout() {
+  graph.nodes.forEach(function(d, i) {
+    d.x = width/4 + 2*width*Math.random()/4;
+    d.y = height/4 + 2*height*Math.random()/4;
+  })
+  graph_update(500);
+
+}
+
+/*CIRCULAR LAYOUTS*/
+function basic_layout(){
+  force.stop();
+  
+  graph.nodes.forEach(function(d, i){
+    d.top_partners.forEach(function(e, j){
+      graph.links.push({"source": d, "target": d.top_partners[j]})
+    })
+  })
+  
+  link = svg.selectAll(".link")
+            .data(graph.links);
+  
+  link.enter().append("line")
+              .attr("class", "link")
+
+  d3.selectAll(".node").remove();
+  draw_graph();
+  var r = Math.min(height, width)/2;
+
+  var arc = d3.svg.arc()
+          .outerRadius(r);
+
+  var pie = d3.layout.pie()
+          .value(function(d, i) { 
+            return 1;  // We want an equal pie share/slice for each point
+          });
+  
+  graph.nodes = pie(graph.nodes).map(function(d, i) {
+    // Needed to caclulate the centroid
+    d.innerRadius = 0;
+    d.outerRadius = r;
+
+    // Building the data object we are going to return
+    d.data.x = arc.centroid(d)[0]+400;
+    d.data.y = arc.centroid(d)[1]+400;
+    return d.data;
+  })
+  graph_update(500);
+}
+
+function rings_layout(){
+
+  svg.style("opacity", 1e-6)
+  .transition()
+    .duration(1000)
+    .style("opacity", 1);
+
+  var r = Math.min(height, width)/4
+  var arc = d3.svg.arc()
+    .outerRadius(r)
+    .innerRadius(0)
+
+  var pie = d3.layout.pie()
+    .value(function(d, i){
+      return 1
+    });
+
+  for (var i=0; i < continents.length; i++){
+    countries = graph.nodes.filter(function(d){
+      if (d.continent == continents[i]){
+        return d;
+      }
+    })
+    
+    countries = pie(countries).map(function(d,i){
+      d.innerRadius = 0;
+      d.outerRadius = r;
+      d.data.x = arc.centroid(d)[0]+foci[continentScale(d.data.continent)].x
+      d.data.y = arc.centroid(d)[1]+foci[continentScale(d.data.continent)].y
+    return d.data;
+    })
+  }
+  graph_update(500);
+}
+
+function flow_layout() {
 
   force.stop();
   
@@ -419,269 +834,34 @@ function circular_layout(data_type) {
     d.outerRadius = r;
 
     // Building the data object we are going to return
-    d.data.x = arc.centroid(d)[0]+width/2;
-    d.data.y = arc.centroid(d)[1]+height/2;
+    d.data.x = arc.centroid(d)[0]+400;
+    d.data.y = arc.centroid(d)[1]+400;
   
     return d.data;
   })
-  d3.select("body").on("mousedown", mousedown);
   graph_update_link(500);
   force.on("tick", graph_update_link(0))
+
 }
 
-function category_color() {
-
-  d3.selectAll("circle").transition().duration(500)
-                        .style("fill", function(d) { 
-                          return fill(continentScale(d.continent)); 
-                        });
+function zoom(value){
+  d3.select("#content1").text("Detailed Information");
+  d3.select("#content2").text(value.name);
+  console.log(value.name);
 }
 
-function category_size() {
-  d3.selectAll("circle").transition().duration(500)
-                        .attr("r", function(d) { 
-                          return Math.sqrt(node_scale(d.cat)); 
-                        });
-}
-
-function graph_update(duration) {
-
-  node.transition().duration(duration)
-      .attr("transform", function(d) { 
-        return "translate("+d.x+","+d.y+")"; 
-      });
-}
-
-function graph_update_link(duration){
-
-
-  for (var i = 0; i < graph.nodes.length; i++){
-    location_x[graph.nodes[i].country_id] = graph.nodes[i].x;
-    location_y[graph.nodes[i].country_id] = graph.nodes[i].y;
-  }
-
-  link.transition().duration(duration)
-      .attr("x1", function(d) { return location_x[d.target.country_id]; })
-      .attr("y1", function(d) { return location_y[d.target.country_id]; })
-      .attr("x2", function(d) { return d.source.x; })
-      .attr("y2", function(d) { return d.source.y; });
-  
-  node.transition().duration(duration)
-      .attr("transform", function(d) { 
-        return "translate("+d.x+","+d.y+")"; 
-  });
-}
-
-function scatter_pop_gdp(){
-  force.stop();
-  var max_min_pop = find_max_min("population");
-  var max_pop = max_min_pop[0];
-  var min_pop = max_min_pop[1];
-
-  var max_min_gdp = find_max_min("gdp");
-  var max_gdp = find_max_min("gdp")[0];
-  var min_gdp = find_max_min("gdp")[1];
-
-  var xScale = d3.scale.linear()
-                  .domain([min_pop, max_pop])
-                  .range([margin.left, width-margin.right])
-
-  var yScale = d3.scale.linear()
-                    .domain([min_gdp, max_gdp])
-                    .range([height-margin.bottom, margin.top])
-  graph.nodes.forEach(function(d, i){
-        d.x = xScale(d.population)
-        d.y = yScale(d.gdp)
-  });
-  graph_update(500);
-}
-
-function scatter_lon_lat(){
-  force.stop();
-  var max_min_lon = find_max_min("longitude");
-  var max_lon = max_min_lon[0];
-  var min_lon = max_min_lon[1];
-
-  var max_min_lat = find_max_min("latitude");
-  var max_lat = max_min_lat[0];
-  var min_lat = max_min_lat[1];
-
-  var xScale = d3.scale.linear()
-                 .domain([min_lon, max_lon])
-                 .range([margin.left, width-margin.right])
-                 .nice()
-  var yScale = d3.scale.linear()
-                  .domain([min_lat, max_lat])
-                  .range([1000, margin.top])
-
-  graph.nodes.forEach(function(d, i){
-      d.x = xScale(d.longitude)
-      d.y = yScale(d.latitude)
-  });
-  graph_update(500);
-}
-
-function mousedown(){
-
-  force.resume();
-  //graph_update(500);
-}
-
-function group1(){
-  graph.nodes.forEach(function(d, i){
-    d.x += continentScale(d.continent)*40
-  });
-}
-
-function group2(){
-  force.on("tick", tick_group2)
-}
-
-function group3(){
-  force.stop();
-
-  var r = Math.min(height, width)/4
-  var arc = d3.svg.arc()
-    .outerRadius(r)
-    .innerRadius(0)
-
-  var pie = d3.layout.pie()
-    .value(function(d, i){
-      return 1
-    });
-
-  for (var i=0; i < continents.length; i++){
-    countries = graph.nodes.filter(function(d){
-      if (d.continent == continents[i]){
-        return d;
-      }
-    })
-    
-    countries = pie(countries).map(function(d,i){
-      d.innerRadius = 0;
-      d.outerRadius = r;
-      d.data.x = arc.centroid(d)[0]+foci[continentScale(d.data.continent)].x
-      d.data.y = arc.centroid(d)[1]+foci[continentScale(d.data.continent)].y
-    return d.data;
-    })
-  }
-  // graph.nodes = pie(graph.nodes).map(function(d,i){
-  //   d.innerRadius = 0;
-  //   d.outerRadius = r;
-  //   d.data.x = arc.centroid(d)[0]+foci[continentScale(d.data.continent)].x
-  //   d.data.y = arc.centroid(d)[1]+foci[continentScale(d.data.continent)].y
-
-  //   return d.data;
-  // })
-  graph_update(500);
-}
-
-
-var flatten_data = function(given_year){
-    var flat_data = []
-    for (var i=0; i < original_data.length; i++){
-        flat_data[i] = {
-          name: original_data[i].name, 
-          country_id: original_data[i].country_id, 
-          continent: original_data[i].continent, 
-          longitude: original_data[i].longitude, 
-          latitude:original_data[i].latitude, 
-          gdp:original_data[i].years[given_year-1995].gdp, 
-          life_expectancy: original_data[i].years[given_year-1995].life_expectancy, 
-          population: original_data[i].years[given_year-1995].population,
-          top_partners: original_data[i].years[given_year-1995].top_partners,
-          year: original_data[i].years[given_year-1995].year
-        };
-    }
-    return flat_data;
-};
-
-function mouseovered(d){
-  var targets = [];
-  for (var i=0; i< 10; i++){
-    targets.push(d.top_partners[i].country_id);
-  }
-  
-  node
-    .classed("node-fade", function(n){
-      for (var i=0; i<10; i++){
-        if (n.country_id == targets[i] || n.country_id == d.country_id){
-          return false;
-        }
-      }
-      return true;
-    })
-
-  link 
-    .classed("link-fade", function(l, i){
-      for (var i=0; i<10; i++){
-        if(l.source.country_id == d.country_id && l.target.country_id == targets[i]){
-          return false;
-        }
-      }
-      return true;
-    })
-  };
-
-  //   })
-  // link
-  //   .classed("link-fade", true);
-  // node
-  //   .classed("node-fade", true)
-  //   .classed("node-fade", function(l){if (l.country_id === 237) return false;})
-  // node
-  //   .classed("node--target", function())
-  //   .classed("node-fade", function(n))
-function mouseouted(d){
-  link
-    .classed("link-fade", false);
-  node
-    .classed("node-fade", false);
-}
-
-function update_data(data_type){
-  sort_data(data_type)
-  if (ranking["ordinal"]){
-    ordinal_ranking(data_type)
-  }
-  else{
-    linear_ranking(data_type)
-  }
-}
-/////////////////////////////////////////////////////////////
-//MENU LISTENER
-d3.select("input[value=\"force\"]").on("click", force_layout);
-d3.select("input[value=\"random\"]").on("click", random_layout);
-d3.select("input[value=\"line\"]").on("click", line_layout);
-d3.select("input[value=\"line_cat\"]").on("click", line_cat_layout);
-d3.select("input[value=\"circular\"]").on("click", circular_layout);
-d3.select("input[value=\"nocolor\"]").on("click", function() {
-  d3.selectAll("circle").transition().duration(500).style("fill", null);
-})
-d3.select("input[value=\"color_cat\"]").on("click", category_color);
-d3.select("input[value=\"nosize\"]").on("click", function() {
-  d3.selectAll("circle").transition().duration(500).attr("r", 5);
-})
-d3.select("input[value=\"size_cat\"]").on("click", category_size);
-d3.select("input[value=\"ordinal\"]").on("click", function(){ranking["ordinal"] = true; ranking["linear"] = false; update_data(data_type)});
-d3.select("input[value=\"linear\"]").on("click", function(){ranking["ordinal"] = false; ranking["linear"] = true; update_data(data_type)});
-d3.select("select").on("change", function(d){
-  data_type = d3.select(this).property("value")
-  update_data(data_type);
-});
-d3.select("input[value=\"pop-gdp\"]").on("click", scatter_pop_gdp);
-d3.select("input[value=\"lon-lat\"]").on("click", scatter_lon_lat);
-d3.select("input[value=\"group1\"]").on("click", group1)
-d3.select("input[value=\"group2\"]").on("click", group2)
-d3.select("input[value=\"group3\"]").on("click", group3)
-/////////////////////////////////////////////////////////////
+/*IMPLEMENTATION*/
 d3.json("data/countries_1995_2012.json", function(error, data){
   original_data = data;
   graph.nodes = flatten_data(current_year);
   draw_graph();
-  //force_layout();
-  update_data(data_type);
+  handle_event(current_layout);
+  counter+=1;
 });
-</script>
-</body>
+</script>  
+</div>  
+<div class="container" id="content1">
+</div>
+<div id="content2"></div>
+</body> 
 </html>
