@@ -88,8 +88,8 @@
   <form>
   <div><strong>Visual Options</strong></div>
   Color:
-    <label><input type="radio" name="color" value="none" onclick="continent_color(this.value)"checked>None</label>
-    <label><input type="radio" name="color" value="color" onclick="continent_color(this.value)">Continents</label>
+    <label><input type="radio" name="color" value="nocolor" checked>None</label>
+    <label><input type="radio" name="color" value="color_cat">Continents</label>
   </form>
   <form>
   Size:
@@ -100,10 +100,10 @@
   <div><strong>Sort</strong></div>
   Sort by:
     <select>
-      <option value="population" selected="selected">Population</option>
+      <option value="name" selected="selected">Name</option>
+      <option value="population">Population</option>
       <option value="gdp">GDP</option>
       <option value="life_expectancy">Life Expectancy</option>
-      <option value="name">Name</option>
     </select>
   </form>
   Current Year: <span id="span_year">1995</span><br>
@@ -134,9 +134,9 @@ var location_x = [{}];
 var location_y = [{}];
 var current_year = 1995;
 var current_layout = "force";
-var data_type = "population";
+var data_type = "name";
 var size_bool = "false";
-var counter = 0;
+
 
 // Generate the force layout
 var force = d3.layout.force()
@@ -144,74 +144,21 @@ var force = d3.layout.force()
     .charge(-100)
     .on("tick", tick)
 
-//DICTIONARIES
 var domain_range = []
-var continents = ["Africa", "Americas", "Asia", "Europe", "Oceania"]
-var cir_foci = [0,1,2,3,4]
+var counter = 0;
 
+//DICTIONARIES
+var layout_types = {"ordinal":true, "linear":false, "line":false, "line_cat":false, "pop_gdp":false, "lon_lat":false
+,"force":false, "basic":false, "pie":false, "rings":false, "flow":false}
+var continents = ["Africa", "Americas", "Asia", "Europe", "Oceania"]
+var foci = [{x:200, y:400}, {x:500, y:700}, {x:700, y:200}, {x:900, y:700}, {x:1200, y:400}];
 //SCALES
 var fill = d3.scale.category10();
 var continentScale = d3.scale.ordinal()
-    .domain(continents)
+    .domain(["Africa", "Asia", "Americas", "Europe", "Oceania"])
     .range([0,1,2,3,4]);
 
 /****************FUNCTIONS****************/
-/*EVENT HANDLER*/
-//Handle update in layout
-function handle_event(value){
-  sort_data(data_type);
-  d3.selectAll(".layout").property("checked", false);
-  d3.select("#"+value).property("checked", true);
-  current_layout = value;
-  d3.select(".link").remove();
-
-  switch(value){
-    case "ordinal":
-      ordinal_ranking();
-      break;
-    case "linear":
-      linear_ranking();
-      break;
-    case "line":
-      line_layout();
-      break;
-    case "line_cat":
-      line_cat_layout();
-      break;
-    case "pop_gdp":
-      scatter_pop_gdp();
-      break;
-    case "lon_lat":
-      scatter_lon_lat();
-      break;
-    case "force":
-      force_layout();
-      break;
-    case "shift":
-      shift_layout();
-      break;
-    case "pie":
-      pie_layout();
-      break;
-    case "basic":
-      basic_layout();
-      break;
-    case "rings":
-      rings_layout();
-      break;
-    case "flow":
-      flow_layout();
-      break;
-  } 
-  proportion_size(size_bool)
-}
-
-//Update data type
-d3.select("select").on("change", function(d){
-  data_type = d3.select(this).property("value")
-  update_data(data_type);
-});
-
 /*DATA HANDLERS*/
 //Format the data for this exericse
 var flatten_data = function(given_year){
@@ -237,8 +184,8 @@ var flatten_data = function(given_year){
 function update_data(value){
   data_type = value;
   handle_event(current_layout);
+  proportion_size(size_bool);
 }
-
 
 //Sort the data type in display in descending order
 //Exception is given to name, which is sorted in ascending order from A-Z
@@ -252,6 +199,7 @@ function sort_data(data_type){
     }
   })
 }
+
 //Update year
 function update_year(new_year){
         current_year = new_year;
@@ -342,6 +290,71 @@ function find_max_min(data_type){
 }
 
 
+/*EVENT HANDLER*/
+function handle_event(value){
+  sort_data(data_type);
+  for (var key in layout_types){
+    layout_types[key] = false;
+  }
+  d3.selectAll(".layout").property("checked", false);
+  layout_types[value] = true;
+  d3.select("#"+value).property("checked", true);
+  current_layout = value;
+  d3.select(".link").remove();
+  switch(value){
+    case "ordinal":
+      ordinal_ranking();
+      break;
+    case "linear":
+      linear_ranking();
+      break;
+    case "line":
+      line_layout();
+      break;
+    case "line_cat":
+      line_cat_layout();
+      break;
+    case "pop_gdp":
+      scatter_pop_gdp();
+      break;
+    case "lon_lat":
+      scatter_lon_lat();
+      break;
+    case "force":
+      force_layout();
+      break;
+    case "shift":
+      shift_layout();
+      break;
+    case "pie":
+      pie_layout();
+      break;
+    case "basic":
+      basic_layout();
+      break;
+    case "rings":
+      rings_layout();
+      break;
+    case "flow":
+      flow_layout();
+      break;
+  } 
+}
+//MENU LISTENER
+d3.select("input[value=\"nocolor\"]").on("click", function() {
+  d3.selectAll("circle").transition().duration(500).style("fill", null);
+})
+d3.select("input[value=\"color_cat\"]").on("click", category_color);
+d3.select("input[value=\"nosize\"]").on("click", function() { size=0;
+  d3.selectAll("circle").transition().duration(500).attr("r", 5);
+})
+d3.select("input[value=\"size_cat\"]").on("click", function(){
+  size=1; proportion_size});
+d3.select("select").on("change", function(d){
+  data_type = d3.select(this).property("value")
+  update_data(data_type);
+});
+
 /*SVG HELPER FUNCTIONS*/
 //Generates the nodes and links
 function draw_graph(){
@@ -429,18 +442,13 @@ function mouseouted(d){
     .classed("node-fade", false);
 }
 
-function continent_color(value) {
+function category_color() {
   //update_data(data_type)
-  if (value == "none"){
-    d3.selectAll("circle").transition().duration(500)
-                          .style("fill", null);
-  }
-  else{
-    d3.selectAll("circle").transition().duration(500)
+
+  d3.selectAll("circle").transition().duration(500)
                         .style("fill", function(d) { 
                           return fill(continentScale(d.continent)); 
                         });
-  }
 }
 
 function proportion_size(bool) {
@@ -456,6 +464,7 @@ function proportion_size(bool) {
                         .attr("r", function(d) { 
                           if(bool == "true"){
                             if (data_type == "population"){
+                              console.log(sizeScale(d.population))
                               return sizeScale(d.population);
                             }
                             else if (data_type == "gdp"){
@@ -502,6 +511,11 @@ function vertical_text(){
         return "rotate(65)"
       })
       .call(force.drag);
+}
+
+//Actions for every time increment
+function tick(){
+  graph_update(0)
 }
 
 
@@ -647,36 +661,46 @@ function scatter_lon_lat(){
 function force_layout() {
   force.nodes(graph.nodes)
       .on("tick", tick)
-      .start();
-}
-
-//Actions for every time increment
-function tick(){
-  graph_update(0)
+      .start()
 }
 
 function shift_layout(){
+  // graph.nodes.forEach(function(d, i){
+  //   d.x += (continentScale(d.continent)*40 - d.x);
+  // });
   force.nodes(graph.nodes)
     .on("tick", shift_tick)
     .start();
+
+  graph.nodes.forEach(function(d, i){
+    console.log(d.x)
+  })
+
+  // svg.style("opacity", 1e-6)
+  // .transition()
+  //   .duration(1000)
+  //   .style("opacity", 1);
+
 };
+
 
 function shift_tick(e){
   var k = e.alpha
   graph.nodes.forEach(function(d, i){
     if (continentScale(d.continent)==0){
       d.x+=-40*k
+      console.log("Ame")
     }
-    else if (continentScale(d.continent)==1){
+    if (continentScale(d.continent)==1){
       d.x+=-20*k
     }
-    else if (continentScale(d.continent)==2){
+    if (continentScale(d.continent)==2){
       d.x+=0
     }
-    else if (continentScale(d.continent)==3){
+    if (continentScale(d.continent)==3){
       d.x+=20*k
     }
-    else if (continentScale(d.continent)==4){
+    if (continentScale(d.continent)==4){
       d.x+=40*k
     }
   })
@@ -684,62 +708,42 @@ function shift_tick(e){
 }
 
 function pie_layout(){
-  var r = Math.min(height, width)/2;
-  var arc = d3.svg.arc()
-              .outerRadius(r);
-  var pie = d3.layout.pie()
-              .value(function(d, i){
-                return 1;
-              });
-
-  cir_foci = [0,1,2,3,4]           
-  cir_foci = pie(cir_foci).map(function(d, i){
-    d.innerRadius = 0
-    d.outerRadius = r;
-    // cir_foci_x.push(arc.centroid(d)[0]);
-    // cir_foci_y.push(arc.centroid(d)[1]);
-    d.x = arc.centroid(d)[0]+r
-    d.y = arc.centroid(d)[1]+r
-    return d
-  })
-
   force.nodes(graph.nodes)
-      .charge(-200)
-      .on("tick", pie_tick)
+      .size([width, height])
+      .charge(-50)
+      .on("tick", tick_pie)
       .start()
+
 }
 
-function pie_tick(e){
-  var k = 0.1*e.alpha;
+//Tick for pie layout
+function tick_pie(e) {
+  var k = .1 * e.alpha;
   graph.nodes.forEach(function(d, i){
-    if (continentScale(d.continent)==0){
-      d.x+=(cir_foci[0].x-d.x)*k
-      d.y+=(cir_foci[0].y-d.y)*k
-    }
-    if (continentScale(d.continent)==1){
-      d.x+=(cir_foci[1].x-d.x)*k
-      d.y+=(cir_foci[1].y-d.y)*k
-    }
-    if (continentScale(d.continent)==2){
-      d.x+=(cir_foci[2].x-d.x)*k
-      d.y+=(cir_foci[2].y-d.y)*k
-    }
-    if (continentScale(d.continent)==3){
-      d.x+=(cir_foci[3].x-d.x)*k
-      d.y+=(cir_foci[3].y-d.y)*k
-    }
-    if (continentScale(d.continent)==4){
-      d.x+=(cir_foci[4].x-d.x)*k
-      d.y+=(cir_foci[4].y-d.y)*k
-    }
-  })
-  graph_update(0);
+    d.x += (foci[continentScale(d.continent)].x - d.x)*k;
+    d.y += (foci[continentScale(d.continent)].y - d.y)*k;
+  });
+  graph_update(0)
 }
 
 /*CIRCULAR LAYOUTS*/
 function basic_layout(){
   force.stop();
-    
+  
+  graph.nodes.forEach(function(d, i){
+    d.top_partners.forEach(function(e, j){
+      graph.links.push({"source": d, "target": d.top_partners[j]})
+    })
+  })
+  
+  link = svg.selectAll(".link")
+            .data(graph.links);
+  
+  link.enter().append("line")
+              .attr("class", "link")
+
+  d3.selectAll(".node").remove();
+  draw_graph();
   var r = Math.min(height, width)/2;
 
   var arc = d3.svg.arc()
@@ -764,29 +768,21 @@ function basic_layout(){
 }
 
 function rings_layout(){
-  force.stop();
-  var r = Math.min(height, width)/2;
+
+  svg.style("opacity", 1e-6)
+  .transition()
+    .duration(1000)
+    .style("opacity", 1);
+
+  var r = Math.min(height, width)/4
   var arc = d3.svg.arc()
-              .outerRadius(r);
+    .outerRadius(r)
+    .innerRadius(0)
+
   var pie = d3.layout.pie()
-              .value(function(d, i){
-                return 1;
-              });
-
-  cir_foci = [0,1,2,3,4]           
-  cir_foci = pie(cir_foci).map(function(d, i){
-    d.innerRadius = 0
-    d.outerRadius = r;
-    // cir_foci_x.push(arc.centroid(d)[0]);
-    // cir_foci_y.push(arc.centroid(d)[1]);
-    d.x = arc.centroid(d)[0]+r
-    d.y = arc.centroid(d)[1]+r
-    return d
-  })
-
-  //Redefine the arc radius for each circle
-  arc = d3.svg.arc()
-              .outerRadius(300);
+    .value(function(d, i){
+      return 1
+    });
 
   for (var i=0; i < continents.length; i++){
     countries = graph.nodes.filter(function(d){
@@ -798,8 +794,8 @@ function rings_layout(){
     countries = pie(countries).map(function(d,i){
       d.innerRadius = 0;
       d.outerRadius = r;
-      d.data.x = arc.centroid(d)[0]+cir_foci[continentScale(d.data.continent)].x
-      d.data.y = arc.centroid(d)[1]+cir_foci[continentScale(d.data.continent)].y
+      d.data.x = arc.centroid(d)[0]+foci[continentScale(d.data.continent)].x
+      d.data.y = arc.centroid(d)[1]+foci[continentScale(d.data.continent)].y
     return d.data;
     })
   }
@@ -807,6 +803,7 @@ function rings_layout(){
 }
 
 function flow_layout() {
+
   force.stop();
   
   graph.nodes.forEach(function(d, i){
@@ -849,8 +846,6 @@ function flow_layout() {
   
     return d.data;
   })
-  continent_color("color");
-  proportion_size("true");
   graph_update_link(500);
   force.on("tick", graph_update_link(0))
 
