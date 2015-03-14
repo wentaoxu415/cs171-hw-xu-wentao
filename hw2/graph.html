@@ -8,6 +8,7 @@
   }
   .panel{
     display: inline;
+    font-size: 16px;
   }
   #container{
     vertical-align: text-top;
@@ -41,11 +42,28 @@
   .slider{
       display: inline-block;
   }
+  .instruction{
+    width:800px;
+    border-style: solid;
+    border-width: 2px
+
+  }
   .menu{
     vertical-align: text-top;
     display:inline-block;
+    margin-top: 20px
+  }
+  .dashboard{
+    display: none;
+    margin-leftt:20px;
+  }
+  #title{
+    font-size: 24px;
+  }
+  div{
     margin-left: 20px;
   }
+
   p{
       display: inline;
   }
@@ -53,90 +71,115 @@
 <body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <div class="panel">
-<div class="menu">
-<div><strong>Layout</strong></div>
-  <form>
-  Ranking:
-    <label><input type="radio" class="layout" id="ordinal" name="ranking" value="ordinal" onclick="handle_event(this.value)">Ordinal</label>
-
-    <label><input type="radio" class="layout" id="linear" name="ranking"  value="linear" onclick="handle_event(this.value)">Linear</label>
-  </form>
-  <form>
-  Horizontal:
-    <label><input type="radio" class="layout" id="line" name="horizontal"  value="line" onclick="handle_event(this.value)"> Line</label>
-    <label><input type="radio" class="layout" id="line_cat" name="horizontal"  value="line_cat" onclick="handle_event(this.value)"> Line by Continent</label>
-  </form>
-  <form>
-  Scatter Plot:
-    <label><input type="radio" class="layout" id="pop_gdp"name="scatter" value="pop_gdp" onclick="handle_event(this.value)">Population vs. GDP</label>
-    <label><input type="radio" class="layout" id="lon_lat" name="scatter" value="lon_lat" onclick="handle_event(this.value)">Longitude vs. Latitude</label>
-  </form>
-  <form>
-  Force Field:
-    <label><input type="radio" class="layout" id="force" name="force" value="force" checked="checked"  onclick="handle_event(this.value)"> Force</label>
-    <label><input type="radio" class="layout" id="shift" name="force" value="shift" onclick="handle_event(this.value)">Shift</label>
-    <label><input type="radio" class="layout" id="pie" name="force" value="pie" onclick="handle_event(this.value)">Pie</label>
-  </form>
-  <form>
-  Circular:
-    <label><input type="radio" class="layout" id="basic" name="circular" value="basic" onclick="handle_event(this.value)">Basic</label>  
-    <label><input type="radio" class="layout" id="rings" name="circular" value="rings" onclick="handle_event(this.value)">Rings</label>
-    <label><input type="radio" class="layout" id="flow" name="circular" value="flow" onclick="handle_event(this.value)">Flow</label>
-  </form>
+<div class="instruction">
+<strong>Instruction</strong><br>
+1) Pick a dataset you want to show.<br>
+2) Pick a layout to display the data.<br>
+3) Pick visual options to aid your understanding of the data.<br>
+4) Click on any bubble to display the country dashboard with detailed export information .<br>
 </div>
 <div class="menu">
-  <form>
-  <div><strong>Visual Options</strong></div>
-  Color:
-    <label><input type="radio" name="color" value="none" onclick="continent_color(this.value)"checked>None</label>
-    <label><input type="radio" name="color" value="color" onclick="continent_color(this.value)">Continents</label>
-  </form>
-  <form>
-  Size:
-    <label><input type="radio" name="size" value=false onclick="proportion_size(this.value)" checked>None</label>
-    <label><input type="radio" name="size" value=true onclick="proportion_size(this.value)">Proportional</label>
-  </form>
-  <form>
-  <div><strong>Sort</strong></div>
-  Sort by:
-    <select>
-      <option value="population" selected="selected">Population</option>
-      <option value="gdp">GDP</option>
-      <option value="life_expectancy">Life Expectancy</option>
-      <option value="name">Name</option>
-    </select>
-  </form>
-  Current Year: <span id="span_year">1995</span><br>
+  <strong>1) Data</strong><br>
+  <div>
+    <form>
+      Display:
+      <select>
+        <option value="population" selected="selected">Population</option>
+        <option value="gdp">GDP</option>
+        <option value="life_expectancy">Life Expectancy</option>
+        <option value="name">Name</option>
+      </select>
+    </form>
+  </div>
     <!-- Update by year -->
-    <div class = "slider">
-        Time Update:
-        <p id="min_year">1995</p>
-        <input type="range" id="time_slider" name="points" min="1995" max="2012" value="0" step="1" oninput="update_year(this.value)"></input>
-        <p id = "max_year">2012</p>
-    </div>
+  <div class = "slider">
+      Time Update:
+      <p id="min_year">1995</p>
+      <input type="range" id="time_slider" name="points" min="1995" max="2012" value="0" step="1" oninput="update_year(this.value)"></input>
+      <p id = "max_year">2012</p>
+  </div> 
+  <div>Current Year: <span id="span_year">1995</span></div>
+</div>
+<div class="menu">
+  <strong>2) Layout</strong>
+  <div>
+    <form>
+    Ranking:
+      <label><input type="radio" class="layout" id="ordinal" name="ranking" value="ordinal" onclick="handle_event(this.value)">Ordinal</label>
+
+      <label><input type="radio" class="layout" id="linear" name="ranking"  value="linear" onclick="handle_event(this.value)">Linear</label>
+    </form>
+  </div>
+  <div>
+    <form>
+    Horizontal:
+      <label><input type="radio" class="layout" id="line" name="horizontal"  value="line" onclick="handle_event(this.value)"> Line</label>
+      <label><input type="radio" class="layout" id="line_cat" name="horizontal"  value="line_cat" onclick="handle_event(this.value)"> Line by Continent</label>
+    </form>
+  </div>
+  <div>
+    <form>
+    Scatter Plot:
+      <label><input type="radio" class="layout" id="pop_gdp"name="scatter" value="pop_gdp" onclick="handle_event(this.value)">Population vs. GDP</label>
+      <label><input type="radio" class="layout" id="lon_lat" name="scatter" value="lon_lat" onclick="handle_event(this.value)">Longitude vs. Latitude</label>
+    </form>
+  </div>
+  <div>
+    <form>
+    Force Field:
+      <label><input type="radio" class="layout" id="force" name="force" value="force" checked="checked"  onclick="handle_event(this.value)"> Force</label>
+      <label><input type="radio" class="layout" id="shift" name="force" value="shift" onclick="handle_event(this.value)">Shift</label>
+      <label><input type="radio" class="layout" id="pie" name="force" value="pie" onclick="handle_event(this.value)">Pie</label>
+    </form>
+  </div>
+  <div>
+  <form>
+    Circular:
+      <label><input type="radio" class="layout" id="basic" name="circular" value="basic" onclick="handle_event(this.value)">Basic</label>  
+      <label><input type="radio" class="layout" id="rings" name="circular" value="rings" onclick="handle_event(this.value)">Rings</label>
+      <label><input type="radio" class="layout" id="flow" name="circular" value="flow" onclick="handle_event(this.value)">Flow</label>
+    </form>
+  </div>
+</div>
+<div class="menu">
+  <strong>3) Visual Options</strong>
+  <div>
+    <form>
+    Color:
+      <label><input type="radio" name="color" value="false" onclick="continent_color(this.value)"checked>None</label>
+      <label><input type="radio" name="color" value="true" onclick="continent_color(this.value)">Continents</label>
+    </form>
+  </div>
+  <div>
+    <form>
+    Size:
+      <label><input type="radio" name="size" value="false" onclick="proportion_size(this.value)" checked>None</label>
+      <label><input type="radio" name="size" value="true" onclick="proportion_size(this.value)">Proportional</label>
+    </form>
+  </div>
 </div>
 <script>
 /****************SETTINGS****************/
 //OFFSETS, DIMENSIONS
-var margin = {top: 50, bottom: 50, left: 50, right: 50};
+var margin = {top: 50, bottom: 50, left: 150, right: 100};
 var width = 1500 - margin.left - margin.right;
 var height = 1500 - margin.top - margin.bottom;
 var svg = d3.select("body").append("svg")
             .attr("class", "svg")
             .attr("width", width)
             .attr("height", height);
-
+ 
 //GLOBAL VARIABLES
 var graph = {nodes: [], links: []};
 var link = null;
 var node = null;
 var location_x = [{}];
 var location_y = [{}];
-var current_year = 1995;
-var current_layout = "force";
-var data_type = "population";
-var size_bool = "false";
-var counter = 0;
+// var current_year = 1995;
+// var current_layout = "force";
+// var data_type = "population";
+// var size_bool = "false";
+// var color_option = "none";
 
 // Generate the force layout
 var force = d3.layout.force()
@@ -145,9 +188,18 @@ var force = d3.layout.force()
     .on("tick", tick)
 
 //DICTIONARIES
-var domain_range = []
+var current_setting = {
+  "year": 1995, 
+  "layout":"force", 
+  "data_type": "population", 
+  "size": "false", 
+  "color": "false"
+}
+var id_country = {}
+var id_continent = {}
 var continents = ["Africa", "Americas", "Asia", "Europe", "Oceania"]
 var cir_foci = [0,1,2,3,4]
+var domain_range = []
 
 //SCALES
 var fill = d3.scale.category10();
@@ -155,14 +207,15 @@ var continentScale = d3.scale.ordinal()
     .domain(continents)
     .range([0,1,2,3,4]);
 
+var formatEXPORT = d3.format("$.3s")
 /****************FUNCTIONS****************/
 /*EVENT HANDLER*/
 //Handle update in layout
 function handle_event(value){
-  sort_data(data_type);
+  sort_data(current_setting["data_type"]);
   d3.selectAll(".layout").property("checked", false);
   d3.select("#"+value).property("checked", true);
-  current_layout = value;
+  current_setting["layout"] = value;
   d3.select(".link").remove();
 
   switch(value){
@@ -203,13 +256,14 @@ function handle_event(value){
       flow_layout();
       break;
   } 
-  proportion_size(size_bool)
+  continent_color(current_setting["color"])
+  proportion_size(current_setting["size"])
 }
 
 //Update data type
 d3.select("select").on("change", function(d){
-  data_type = d3.select(this).property("value")
-  update_data(data_type);
+  current_setting["data_type"] = d3.select(this).property("value")
+  update_data(current_setting["data_type"]);
 });
 
 /*DATA HANDLERS*/
@@ -235,33 +289,37 @@ var flatten_data = function(given_year){
 
 //Update the data when data type is changed
 function update_data(value){
-  data_type = value;
-  handle_event(current_layout);
+  current_setting["data_type"] = value;
+  handle_event(current_setting["layout"]);
 }
 
 
 //Sort the data type in display in descending order
 //Exception is given to name, which is sorted in ascending order from A-Z
-function sort_data(data_type){
+function sort_data(sort_by){
   graph.nodes = graph.nodes.sort(function(a, b){
-    if (data_type == "name"){
-      return d3.ascending(a[data_type], b[data_type]);
+    if (sort_by == "name"){
+      return d3.ascending(a[sort_by], b[sort_by]);
     }
     else{
-      return d3.descending(a[data_type], b[data_type]);
+      return d3.descending(a[sort_by], b[sort_by]);
     }
   })
 }
 //Update year
 function update_year(new_year){
-        current_year = new_year;
-        d3.select("#span_year").text(current_year);
+        current_setting["year"] = new_year;
+        d3.select("#span_year").text(new_year);
         graph.nodes = flatten_data(new_year);
-        //draw_graph();
         node.data(graph.nodes);
-        //graph_update(100)
-        update_data(data_type);
-        
+        handle_event(current_setting["layout"])
+}
+
+function scan_id(data){
+  for (var i = 0; i < data.length; i++){
+    id_country[data[i].country_id] = data[i].name;
+    id_continent[data[i].country_id] = data[i].continent;
+  }
 }
 //Find the max and min of the data. Used for setting scales.
 function find_max_min(data_type){
@@ -355,15 +413,14 @@ function draw_graph(){
             .data(graph.nodes)
           .enter()
             .append("g").attr("class", "node");
-  
+
   node.append("circle")
     .attr("r", 5)
     .on('click', function(d){
-      zoom(d);
+      dashboard(d, d.top_partners);
     })
-  proportion_size()
-  horizontal_text()
 
+  horizontal_text()
 };
 
 
@@ -430,8 +487,8 @@ function mouseouted(d){
 }
 
 function continent_color(value) {
-  //update_data(data_type)
-  if (value == "none"){
+  current_setting["color"] = value
+  if (value == "false"){
     d3.selectAll("circle").transition().duration(500)
                           .style("fill", null);
   }
@@ -443,9 +500,9 @@ function continent_color(value) {
   }
 }
 
-function proportion_size(bool) {
-  size_bool = bool;
-  var max_min = find_max_min(data_type);
+function proportion_size(value) {
+  current_setting["size"] = value
+  var max_min = find_max_min(current_setting["data_type"]);
   var max = max_min[0];
   var min = max_min[1];
   var sizeScale = d3.scale.linear()
@@ -454,14 +511,14 @@ function proportion_size(bool) {
 
   d3.selectAll("circle").transition().duration(500)
                         .attr("r", function(d) { 
-                          if(bool == "true"){
-                            if (data_type == "population"){
+                          if(value == "true"){
+                            if (current_setting["data_type"] == "population"){
                               return sizeScale(d.population);
                             }
-                            else if (data_type == "gdp"){
+                            else if (current_setting["data_type"] == "gdp"){
                               return sizeScale(d.gdp);
                             }
-                            else if (data_type == "life_expectancy"){
+                            else if (current_setting["data_type"] == "life_expectancy"){
                               return sizeScale(d.life_expectancy);
                             }
                             else{
@@ -484,7 +541,7 @@ function horizontal_text(){
     .attr("font-size", "12px")
     .attr("x", 10)
     .attr("y", 3)
-    //.call(force.drag)
+
 }
 
 //Attaches vertical text
@@ -522,14 +579,12 @@ function ordinal_ranking(){
 
 function linear_ranking(){
   force.stop();
-
-  var max = null;
-  var min = null;
   var yScale = null;
-  if (data_type != "name"){
-    var max_min = find_max_min(data_type);
-    max = max_min[0];
-    min = max_min[1];
+
+  if (current_setting["data_type"] != "name"){
+    var max_min = find_max_min(current_setting["data_type"]);
+    var max = max_min[0];
+    var min = max_min[1];
     yScale = d3.scale.linear()
                   .domain([max, min])
                   .range([margin.top, height-margin.bottom]);
@@ -537,7 +592,7 @@ function linear_ranking(){
 
   graph.nodes.forEach(function(d,i){
     d.x = 200;
-    switch(data_type){
+    switch(current_setting["data_type"]){
       case "name":
         yScale = d3.scale.ordinal()
                     .domain(domain_range)
@@ -599,8 +654,8 @@ function scatter_pop_gdp(){
   var min_pop = max_min_pop[1];
 
   var max_min_gdp = find_max_min("gdp");
-  var max_gdp = find_max_min("gdp")[0];
-  var min_gdp = find_max_min("gdp")[1];
+  var max_gdp = max_min_gdp[0];
+  var min_gdp = max_min_gdp[1];
 
   var xScale = d3.scale.linear()
                   .domain([min_pop, max_pop])
@@ -609,6 +664,7 @@ function scatter_pop_gdp(){
   var yScale = d3.scale.linear()
                     .domain([min_gdp, max_gdp])
                     .range([height-margin.bottom, margin.top])
+
   graph.nodes.forEach(function(d, i){
         d.x = xScale(d.population)
         d.y = yScale(d.gdp)
@@ -646,8 +702,10 @@ function scatter_lon_lat(){
 /*FORCE LAYOUTS*/
 function force_layout() {
   force.nodes(graph.nodes)
+      .charge(-100)
       .on("tick", tick)
       .start();
+  horizontal_text()
 }
 
 //Actions for every time increment
@@ -655,10 +713,14 @@ function tick(){
   graph_update(0)
 }
 
+
 function shift_layout(){
+  
   force.nodes(graph.nodes)
+    .charge(-50) 
     .on("tick", shift_tick)
     .start();
+  horizontal_text()
 };
 
 function shift_tick(e){
@@ -680,10 +742,12 @@ function shift_tick(e){
       d.x+=40*k
     }
   })
+  horizontal_text()
   graph_update(0)
 }
 
 function pie_layout(){
+  horizontal_text()
   var r = Math.min(height, width)/2;
   var arc = d3.svg.arc()
               .outerRadius(r);
@@ -696,8 +760,6 @@ function pie_layout(){
   cir_foci = pie(cir_foci).map(function(d, i){
     d.innerRadius = 0
     d.outerRadius = r;
-    // cir_foci_x.push(arc.centroid(d)[0]);
-    // cir_foci_y.push(arc.centroid(d)[1]);
     d.x = arc.centroid(d)[0]+r
     d.y = arc.centroid(d)[1]+r
     return d
@@ -739,7 +801,7 @@ function pie_tick(e){
 /*CIRCULAR LAYOUTS*/
 function basic_layout(){
   force.stop();
-    
+
   var r = Math.min(height, width)/2;
 
   var arc = d3.svg.arc()
@@ -786,7 +848,7 @@ function rings_layout(){
 
   //Redefine the arc radius for each circle
   arc = d3.svg.arc()
-              .outerRadius(300);
+              .outerRadius(250);
 
   for (var i=0; i < continents.length; i++){
     countries = graph.nodes.filter(function(d){
@@ -808,7 +870,9 @@ function rings_layout(){
 
 function flow_layout() {
   force.stop();
-  
+  svg.selectAll(".link").remove()
+  d3.selectAll(".node").remove();
+  graph.links = []
   graph.nodes.forEach(function(d, i){
     d.top_partners.forEach(function(e, j){
       graph.links.push({"source": d, "target": d.top_partners[j]})
@@ -821,7 +885,7 @@ function flow_layout() {
   link.enter().append("line")
               .attr("class", "link")
 
-  d3.selectAll(".node").remove();
+ 
   draw_graph();
   node.on("mouseover", mouseovered);
   node.on("mouseout", mouseouted);
@@ -830,7 +894,7 @@ function flow_layout() {
   var arc = d3.svg.arc()
           .outerRadius(r);
 
-  sort_data(data_type);
+  sort_data(current_setting["data_type"]);
 
   var pie = d3.layout.pie()
           //.sort(function(a, b) { return d3.descending(a["population"], b["population"]);}) // Sorting by categories
@@ -849,31 +913,102 @@ function flow_layout() {
   
     return d.data;
   })
-  continent_color("color");
-  proportion_size("true");
-  graph_update_link(500);
-  force.on("tick", graph_update_link(0))
-
+  graph_update_link(0);
 }
 
-function zoom(value){
-  d3.select("#content1").text("Detailed Information");
-  d3.select("#content2").text(value.name);
-  console.log(value.name);
+function export_max(value){
+  var export_max = 0
+  for (var i = 0; i<10; i++){
+    new_max = value[i].total_export
+    if (new_max > export_max){
+      export_max = new_max;
+    }
+  }
+  return export_max;
+}
+
+
+function dashboard(value, dest){
+  d3.select(".svg_dash").remove();
+
+  d3.select(".dashboard").style("display", "inline-block")
+  d3.select("#country_name").text("Country:"+" "+value.name);
+
+  var height_dash = 300
+  var xScale_dash = d3.scale.linear().range([0, width-margin.left-margin.bottom]);
+  var yScale_dash = d3.scale.ordinal().rangeRoundBands([0, height_dash], .1, 0);
+
+  var svg_dash = d3.select(".dashboard").append("svg")
+                  .attr("class", "svg_dash")
+                  .attr("width", width)
+                  .attr("height", height_dash+100);
+  svg_dash.append("text")
+          .attr("x", 150)
+          .attr("y", 40)
+          .attr("text-anchor", "left")
+          .style("font-size", "20px")
+          .text("Top 10 Exporting Partners")
+  var g = svg_dash.append("g")
+            .attr("transform", "translate("+margin.left+", "+margin.top+")")
+
+  var xAxis_dash = d3.svg.axis()
+                    .scale(xScale_dash)
+                    .outerTickSize(0)
+                    .orient("bottom")
+                    .tickFormat(formatEXPORT)
+  var yAxis_dash = d3.svg.axis()
+                      .scale(yScale_dash)
+                      .outerTickSize(0)
+                      .orient("left")
+
+  max_val = export_max(dest)                      
+  xScale_dash.domain([0, max_val]);
+  yScale_dash.domain(dest.map(function(d){
+    return id_country[d.country_id];}));
+ 
+  g.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0,"+ height_dash + ")")
+    .call(xAxis_dash)
+
+  g.append("g")
+    .attr("class", "y axis")
+    .call(yAxis_dash)
+
+  var rows = g.append("g")
+              .selectAll("g.row")
+              .data(dest)
+            .enter()
+            .append("g")
+            .attr("class", "row")
+            .text(function(d){ return id_country[d.country_id]})
+  
+  var bars = rows.append("rect")
+                  .attr("height", 20)
+                  .attr("x", xScale_dash(0))
+                  .attr("y", function(d){
+                    return yScale_dash(id_country[d.country_id])
+                  }) 
+                  .attr("fill", function(d){
+                    return fill(continentScale(id_continent[d.country_id]))
+                  })
+                  .attr("width", function(d){return xScale_dash(d.total_export)})
 }
 
 /*IMPLEMENTATION*/
 d3.json("data/countries_1995_2012.json", function(error, data){
   original_data = data;
-  graph.nodes = flatten_data(current_year);
+  graph.nodes = flatten_data(current_setting["year"]);
+  scan_id(graph.nodes)
   draw_graph();
-  handle_event(current_layout);
-  counter+=1;
+  handle_event(current_setting["layout"]);
 });
 </script>  
 </div>  
-<div class="container" id="content1">
+<div id="title"><strong>4) Country Dashboard</strong></div>
+<div class="dashboard">
+  <div id="country_name"></div>
 </div>
-<div id="content2"></div>
+</div>
 </body> 
 </html>
