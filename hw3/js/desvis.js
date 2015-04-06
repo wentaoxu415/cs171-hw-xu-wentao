@@ -3,8 +3,9 @@
  */
 
 var global_avg = [];
+var num_local_days = 397;
 
-var find_average = function(unique_data){
+var find_global_avg = function(unique_data){
   var avg = d3.range(0,16).map(function(){
     return 0;
   })
@@ -13,7 +14,7 @@ var find_average = function(unique_data){
 
   unique_data.forEach(function(d) {
           d3.range(16).forEach(function (a){
-              if (d.prios[a]!= "undefined"){
+              if (d.prios[a] != "undefined"){
                 avg[a] += d.prios[a];  
               }
           })
@@ -26,6 +27,17 @@ var find_average = function(unique_data){
   return avg
 }
 
+var find_local_avg = function(unique_data){
+  var avg = d3.range(0,16).map(function(){
+    return 0;
+  })
+
+  unique_data.forEach(function(d, i){
+    avg[i] = d/num_local_days;
+  })
+  return avg;
+}
+
  // constructor
 DesVis = function(_parentElement, _data, _metaData){
     this.parentElement = _parentElement;
@@ -34,8 +46,6 @@ DesVis = function(_parentElement, _data, _metaData){
     this.displayData = [];
     this.initVis();
 }
-
-
 
 //Method that sets up the SVG and the variables
 DesVis.prototype.initVis = function(){
@@ -54,7 +64,8 @@ DesVis.prototype.initVis = function(){
 
     // creates axis and scales
     this.x = d3.scale.ordinal()
-      .rangeRoundBands([0, this.width - 50], .1).domain(d3.range(0,16));
+      .rangeRoundBands([0, this.width - 50], .1)
+      .domain(d3.range(0,16));
 
     this.y = d3.scale.linear()
       .range([this.height - 150,0]);
@@ -90,7 +101,32 @@ DesVis.prototype.initVis = function(){
         .append("text")
         .attr("transform", "rotate(-90)")
 
-    global_avg = find_average(that.data);
+    global_avg = find_global_avg(that.data);
+    // // Data join
+    // var line = this.svg.selectAll(".line")
+    //   .data(global_avg);
+
+    // // Append new bar groups, if required
+    // line.enter()
+    //     .append("rect")
+    //     .attr("class", "line")
+    //     .attr("x", function(global_avg,i){
+    //         return  that.x(i);
+    //     })
+    //    .attr("width", (that.width/18));
+
+    // // adds bar features
+    // line
+    //     .attr("y", function(d) {
+    //         return (that.y(d));
+    //     })
+    //    .attr("height", function(d){ return 5;})
+    //    // .style("fill", function(d,i) {
+    //    //      return that.metaData.priorities[i]["item-color"];
+    //    //  });
+
+
+
     // filter, aggregate, modify data
     this.wrangleData();
 
@@ -103,7 +139,8 @@ DesVis.prototype.initVis = function(){
 DesVis.prototype.wrangleData= function(_filterFunction){
 
     // adds filtered/aggregated data to data to be visualized
-    this.displayData = this.filterAndAggregate(_filterFunction);
+    var temp = this.filterAndAggregate(_filterFunction);
+    this.displayData = find_local_avg(temp);
 }
 
 // updates bar visualization
@@ -125,23 +162,25 @@ DesVis.prototype.updateVis = function(){
       return temp
     }
 
-    // var local_avg;
-    // local_avg = find_average(this.displayData);
+    var temp_displayData;
+    temp_displayData = temp_max(global_avg, this.displayData) 
+
+    this.y.domain([0, d3.max(temp_displayData)]);
+
+    var joined_data = d3.range(0,16).map(function(){
+    return 0;
+  })
+    for (var i = 0; i< 16; i++){
+      joined_data[i] = [global_avg[i], this.displayData[i]] 
+    }
     
-    // var temp_displayData;
-    // temp_displayData = temp_max(global_avg, local_avg) 
-
-    this.y.domain([0, d3.max(global_avg)]);
-
     // calls y Axis
     this.svg.select(".y.axis")
         .call(this.yAxis)
 
      // Data join
     var bar = this.svg.selectAll(".bar")
-      .data(global_avg);
-
-
+      .data(joined_data);
 
     // removes unneeded bars
     bar.exit()
@@ -151,7 +190,7 @@ DesVis.prototype.updateVis = function(){
     bar.enter()
         .append("rect")
         .attr("class", "bar")
-        .attr("x", function(global_avg,i){
+        .attr("x", function(d,i){
             return  that.x(i);
         })
        .attr("width", (that.width/16));
@@ -159,12 +198,30 @@ DesVis.prototype.updateVis = function(){
     // adds bar features
     bar
         .attr("y", function(d) {
-            return (that.y(d));
+            return (that.y(d[1]));
         })
-       .attr("height", function(d){ return 10;})
-       // .style("fill", function(d,i) {
-       //      return that.metaData.priorities[i]["item-color"];
-       //  });
+       .attr("height", function(d){ return that.height - 150 - that.y(d[1]);})
+       .style("fill", function(d,i) {
+            return that.metaData.priorities[i]["item-color"];
+        });
+
+
+    bar.append("line")
+      .attr("class", "line")
+      .attr("x", function(d, i){
+        return that.x(i);
+      })
+      .attr("width", (that.width/16))
+
+    bar
+      .attr("y", function(d){
+          return that.y(d[0]);
+      })
+      .attr("height", 5)
+      .style("fill", function(d,i) {
+            return "#000000"
+        });
+  
 }
 
  // wrangles data based on region selected in response to event handler
@@ -184,7 +241,7 @@ DesVis.prototype.onSelectionChange= function (selectionStart, selectionEnd){
     else {
         var wrangled = this.wrangleData(filter);
     }
-     
+    num_local_days = d3.time.day.utc.range(selectionStart, selectionEnd).length;
     // update visualization
     this.updateVis();
 }

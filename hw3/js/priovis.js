@@ -78,6 +78,7 @@ PrioVis.prototype.wrangleData= function(_filterFunction){
 
     // adds filtered/aggregated data to data to be visualized
     this.displayData = this.filterAndAggregate(_filterFunction);
+
 }
 
 // updates bar visualization
@@ -137,7 +138,6 @@ PrioVis.prototype.onSelectionChange= function (selectionStart, selectionEnd){
     else {
         var wrangled = this.wrangleData(filter);
     }
-     
     // update visualization
     this.updateVis();
 }

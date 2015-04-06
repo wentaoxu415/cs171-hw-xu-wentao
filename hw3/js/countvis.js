@@ -34,12 +34,6 @@ CountVis = function(_parentElement, _data, _metaData, _eventHandler){
     this.eventHandler = _eventHandler;
     this.displayData = [];
 
-    this.svg = this.parentElement.select("svg");
-    // TODO: define all "constants" here
-    this.margin = {top: 20, right: 20, bottom: 30, left: 0},
-    this.width = this.svg.attr("width")-this.margin.left - this.margin.right,
-    this.height = this.svg.attr("height") - this.margin.top - this.margin.bottom;
-
     this.initVis();
 }
 
@@ -49,23 +43,17 @@ CountVis = function(_parentElement, _data, _metaData, _eventHandler){
  */
 CountVis.prototype.initVis = function(){
 
-    var that = this; // read about the this
+    var that = this; 
 
-    //TODO: implement here all things that don't change
-    //TODO: implement here all things that need an initial status
-    // Examples are:
-    // - construct SVG layout
-    // - create axis
-    // -  implement brushing !!
-    // --- ONLY FOR BONUS ---  implement zooming
-    
+    this.svg = this.parentElement.selectAll("svg");
+    // TODO: define all "constants" here
+    this.margin = {top: 20, right: 20, bottom: 30, left: 50},
+    this.width = this.svg.attr("width")-this.margin.left - this.margin.right,
+    this.height = this.svg.attr("height") - this.margin.top - this.margin.bottom;
 
 
     // TODO: modify this to append an svg element, not modify the current placeholder SVG element
-    this.svg = this.parentElement.select("svg")
-        .attr("width", this.width + this.margin.left + this.margin.right)
-        .attr("height", this.height + this.margin.top + this.margin.bottom)
-      .append("g")
+    this.svg = this.svg.append("g")
         .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
 
     // creates axis and scales
@@ -78,7 +66,8 @@ CountVis.prototype.initVis = function(){
     this.xAxis = d3.svg.axis()
       .scale(this.x)
       .ticks(6)
-      .orient("bottom");
+      .orient("bottom")
+      
 
     this.yAxis = d3.svg.axis()
       .scale(this.y)

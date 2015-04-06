@@ -37,8 +37,8 @@ AgeVis.prototype.initVis = function(){
     //TODO: construct or select SVG
 
     // TODO: define all constants here
-    this.svg = this.parentElement.select("svg");
-    this.margin = {top: 20, right: 20, bottom: 30, left: 0},
+    this.svg = this.parentElement.selectAll("svg");
+    this.margin = {top: 20, right: 20, bottom: 30, left: 50},
     this.width = this.svg.attr("width")-this.margin.left - this.margin.right,
     this.height = this.svg.attr("height") - this.margin.top - this.margin.bottom;
     //TODO: create axis and scales

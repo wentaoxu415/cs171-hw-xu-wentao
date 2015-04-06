@@ -54,12 +54,12 @@
         <div class="row">
             <div class="col-md-9" id="countVis">
                 <!-- TODO: delete placeholder svg element -->
-                <svg width="650" height="330">
+                <svg width="670" height="450">
                 </svg>
             </div>
             <div class="col-md-3" id="ageVis">
                 <!-- TODO: delete placeholder svg element -->
-                <svg width="230" height="330">
+                <svg width="370" height="450">
                 </svg>
             </div>
         </div>
@@ -97,24 +97,6 @@
             // variables keeping global knowledge of the data
             var allData = [];
             var metaData = {};
-            var names = [
-                "Action taken on climate change",
-                "Better transport and roads",
-                "Support for people who can’t work",
-                "Access to clean water and sanitation",
-                "Better healthcare",
-                "A good education",
-                "An honest and responsive government",
-                "Phone and internet access",
-                "Reliable energy at home",
-                "Affordable and nutritious food",
-                "Protecting forests, rivers and oceans",
-                "Protection against crime and violence",
-                "Political freedoms",
-                "Freedom from discrimination and persecution",
-                "Equality between men and women",
-                "Better job opportunities"
-                ]
 
             // this function can convert Date objects to a string
             // it can also convert strings to Date objects
@@ -173,45 +155,15 @@
                                     count: parseInt(d["count(*)"])
                                 };
 
-                                // TODO: implement that  !!
-                                res.names = [
-                                    "Action taken on climate change",
-                                    "Better transport and roads",
-                                    "Support for people who can’t work",
-                                    "Access to clean water and sanitation",
-                                    "Better healthcare",
-                                    "A good education",
-                                    "An honest and responsive government",
-                                    "Phone and internet access",
-                                    "Reliable energy at home",
-                                    "Affordable and nutritious food",
-                                    "Protecting forests, rivers and oceans",
-                                    "Protection against crime and violence",
-                                    "Political freedoms",
-                                    "Freedom from discrimination and persecution",
-                                    "Equality between men and women",
-                                    "Better job opportunities"
-                                    ]
-
-
                                 res.prios = []
 
                                 for (var i = 0; i < 16; i++){
                                     if (d["sum(p"+i+")"] != "undefined"){
                                         res.prios[i] = parseInt(d["sum(p"+i+")"])
                                     }
+   
                                 }
 
-
-                                
-                                // should be an array of 16 numbers with the total count MAPping the prio values,
-                                //  [d["sum(p0)"], d["sum(p1)"], d["sum(p2)"],...]
-                                // Example:
-                                // [10,200,500,... ]
-
-
-                                // This is ONE way to create an array of length 100
-                                // and set every value to "0")
                                 res.ages = d3.range(0,100). map(function(){return 0;})
 
                                 d.age.map(function (a){
@@ -219,12 +171,6 @@
                                     return res.ages[a.age] = parseInt(a["count(*)"]);
                                     }
                                 })
-                                // TODO: Assign the count for each age to the index position
-                                // eg: res.ages[22] should contain the count value for age 22
-                                // BE AWARE THAT THE DATA MIGHT CONTAIN ages >99 which you have to handle especially
-                                // final result:
-                                // [0,0,0,..,1034,23,...] -- array length is 100
-
 
                                 return res;
                             }
@@ -236,16 +182,12 @@
             }
 
             var startHere = function(){
-                //TODO: load data here and call "dataLoaded" afterwards
-                // Hint: http://giscollective.org/d3-queue-js/
                 queue()
                     .defer(d3.json, 'data/perDayData.json')
                     .defer(d3.json, 'data/MYWorld_fields.json')
                     .await(dataLoaded)
-            
-                // bind reset zoom button to a function (-- ONLY FOR BONUS --)
+
                 d3.select("#fitInBtn").on("click", function() {
-                    // TODO: -- ONLY FOR BONUS --
                 });
             }
 
