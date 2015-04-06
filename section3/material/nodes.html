@@ -39,6 +39,7 @@
 
   var force = d3.layout.force()
       .charge(-120)
+      .friction(0.5)
       .linkDistance(30)
       .size([width, height]);
 
@@ -70,7 +71,9 @@
         .start();
 
     force.on("tick", function() {
-      // ...
+      console.log(data[0]);
+      node.attr("cx", function(d){ return d.x;})
+          .attr("cy", function(d){return d.y;});
     });
 
   });

@@ -10,7 +10,7 @@
     <script src="libs/bootstrap/js/bootstrap.min.js" charset="utf-8"></script>
 
     <script src="http://hs8.de/cs171_tests/tester.js"></script>
-
+    <script src="http://d3js.org/queue.v1.min.js"></script>
     <!--Stylesheets-->
     <link rel="stylesheet" type="text/css" href="libs/bootstrap/css/bootstrap.min.css">
 
@@ -49,10 +49,10 @@
 
 
 <script>
+    var allData = [];
+    var metaData = {};
 
     $(function () {
-        var allData = [];
-        var metaData = {};
 
         var dateFormatter = d3.time.format("%Y-%m-%d");
 
@@ -65,8 +65,14 @@
             // you might make use of the map and filter functions
             // HINT: javascript Date objects are comparable !!
             // see: http://www.w3schools.com/js/js_date_methods.asp
-
-
+            data_range = allData.filter(function(d){
+                if (d.time >= from & d.time <= to)
+                    return d;
+            })
+            
+            data_range.forEach(function(d, i){
+                count += d.count; 
+            })
 
 
 
@@ -82,10 +88,8 @@
 
 
 
-        function allLoaded(perDay,meta){
-
+        function allLoaded(error, perDay, meta){
             metaData = meta;
-
             // this will transform your data in a nicer form
             allData = perDay.map(function (d) {
                         var res = {
@@ -109,14 +113,12 @@
 
 
         // TODO: TASK 2 A -- implement your data loading here and then call "allLoaded(perDayData, metaData)"
-
-
-
-
-
-
-
+        queue()
+            .defer(d3.json, 'data/perDayData.json')
+            .defer(d3.json, 'data/MYWorld_fields.json')
+            .await(allLoaded)
     })
+
 
 
 

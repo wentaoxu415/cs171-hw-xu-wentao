@@ -1,6 +1,12 @@
 body{
     font-family: 'PT Sans', sans-serif;
 }
+
+.area {
+    fill: #1f77b4;
+    stroke-width: 0;
+}
+
 .axis text {
     font: 10px sans-serif;
 }
